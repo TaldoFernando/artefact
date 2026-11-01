@@ -2,6 +2,9 @@ import csv
 import json
 import tempfile
 import unittest
+from unittest.mock import patch
+from io import BytesIO
+from urllib.error import HTTPError, URLError
 from pathlib import Path
 from shutil import copytree
 
@@ -140,7 +143,7 @@ class AgentTests(unittest.TestCase):
         agent = Agent(DATA, ScriptedModel())
         self.assertEqual(agent.dispatch("execute_sql", {"sql": "DROP TABLE products"})["error"], "invalid_tool_call")
         self.assertEqual(agent.dispatch("search_policies", {})["error"], "invalid_arguments")
-        self.assertEqual(agent.dispatch("search_products", {"available_only": "false"})["error"], "lookup_failed")
+        self.assertEqual(agent.dispatch("search_products", {"available_only": "false"})["error"], "invalid_arguments")
 
     def test_tool_loop_is_bounded(self):
         agent = Agent(DATA, ScriptedModel(*[tool("search_products") for _ in range(5)]))

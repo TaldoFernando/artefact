@@ -12,7 +12,7 @@ def main():
     args = parser.parse_args()
     try:
         agent = Agent(args.data_dir)
-    except (OSError, ValueError) as exc:
+    except (OSError, ValueError, KeyError, ArithmeticError) as exc:
         parser.exit(1, f"Cannot load source data: {exc}\n")
     print("Mel: Hi! Your music starts here. How can I help? (/reset, /quit)")
     while True:
@@ -24,7 +24,7 @@ def main():
         if text == "/quit":
             break
         if text == "/reset":
-            agent.history.clear()
+            agent.reset()
             print("Mel: Conversation cleared.")
             continue
         print("Mel:", agent.reply(text))
