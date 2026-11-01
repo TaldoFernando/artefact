@@ -56,8 +56,17 @@ class Store:
                             "status": row["status"], "stock_quantity": int(row["stock_quantity"]),
                             "available": available, "list_price_brl": money(price),
                             "discount_percent": str(discount), "price_brl": money(effective),
+                            "promotion_active": bool(discount),
                             "pix_price_brl": money(effective if discount else price * Decimal("0.95")),
+                            "pix_discount_applied": not bool(discount),
+                            "payment_rule": "PIX discount does not apply to promotional prices." if discount else "5% PIX discount available on list price.",
                             "description": row["description"]})
+        if not results and query.strip() and category_id is not None:
+            # A model may misclassify a named instrument. Exact name evidence wins.
+            recovered = self.search_products(query=query, max_price=max_price,
+                                             available_only=available_only)
+            recovered["search_note"] = "No match in requested category; retried name across all categories."
+            return recovered
         results.sort(key=lambda r: (Decimal(r["price_brl"]), r["product_id"]))
         return {"source": "products.csv + promotions.csv (provided snapshot, not a live ERP)",
                 "queried_at_utc": datetime.now(timezone.utc).isoformat(),

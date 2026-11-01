@@ -81,6 +81,11 @@ class CatalogTests(unittest.TestCase):
     def test_unknown_model(self):
         self.assertEqual(self.store.search_products("imaginary model")["total_matches"], 0)
 
+    def test_wrong_category_does_not_hide_named_product(self):
+        result = self.store.search_products("Takamine GD20", category_id=1)
+        self.assertEqual(result["products"][0]["product_id"], 95)
+        self.assertIn("search_note", result)
+
     def test_order_requires_authentication(self):
         self.assertEqual(self.store.order_status(1)["error"], "authentication_required")
 
@@ -117,7 +122,9 @@ class AgentTests(unittest.TestCase):
         model = ScriptedModel(tool("search_products", query="Takamine GD20"),
                               {"content": "BRL 2,199.00"}, {"content": "Anything else?"})
         agent = Agent(DATA, model)
-        self.assertEqual(agent.reply("Price of Takamine GD20?"), "BRL 2,199.00")
+        answer = agent.reply("Price of Takamine GD20?")
+        self.assertIn("BRL 2199.00", answer)
+        self.assertIn("No active promotion", answer)
         evidence = json.loads(model.requests[1][-1]["content"])
         self.assertEqual(evidence["products"][0]["price_brl"], "2199.00")
         agent.reply("Thanks")
@@ -158,6 +165,16 @@ class AgentTests(unittest.TestCase):
     def test_input_limit(self):
         agent = Agent(DATA, ScriptedModel())
         self.assertIn("4,000", agent.reply("x" * 4001))
+
+    def test_ungrounded_answer_triggers_lookup(self):
+        model = ScriptedModel({"content": "The store is always open."},
+                              tool("search_policies", query="hours"),
+                              {"content": "Regular hours are on page 2."})
+        agent = Agent(DATA, model)
+        answer = agent.reply("When is the store open?")
+        self.assertNotIn("always open", answer)
+        self.assertIn("Policy evidence", answer)
+        self.assertEqual(agent.last_trace[0]["tool"], "search_policies")
 
 
 if __name__ == "__main__":

@@ -33,6 +33,9 @@ is_active is the only promotion flag available. Never stack discounts: PIX 5% on
 applies to nonpromotional prices. Show list price, promotional price and percentage.
 For online regret returns, ask for actual receipt date and purchase channel before
 discussing the seven-calendar-day window. Estimated delivery is not receipt.
+An order ID is not required to explain a policy. Once the customer provides channel
+and days since receipt, explain the applicable policy and practical next step without
+asking again for the same facts or pretending you can process the return.
 Do not deny statutory rights from manual exclusions. Sections 4.2 and 8 overlap:
 explain the stated 30-day exchange and 90-day warranty, then refer ambiguous cases.
 Payment summary and detailed installment rules conflict: do not quote an exact
@@ -61,6 +64,32 @@ TOOLS = [
     definition("order_status", "Look up order owned by server-authenticated identity. Otherwise returns authentication_required.",
                {"order_id": {"type": "integer", "minimum": 1}}, ["order_id"]),
 ]
+
+
+def render_catalog(traces):
+    """Render factual catalog answers from tool records, never from generated numbers."""
+    lines = ["Here's what I found in the supplied catalog snapshot (prices in BRL):"]
+    products = {}
+    for trace in traces:
+        result = trace["result"]
+        for product in result.get("products", []):
+            products[product["product_id"]] = product
+        if result.get("truncated"):
+            lines.append(f"Showing the first 10 of {result['total_matches']} matches, sorted by price. Please narrow your search for more options.")
+    if not products:
+        return "I couldn't find matching instruments in the supplied catalog snapshot. Try a model name or a broader category; I cannot confirm availability beyond these records."
+    for product in products.values():
+        lines.append(f"\n- **{product['name']}**: BRL {product['price_brl']}. "
+                     f"Stock: {product['stock_quantity']}; status: {product['status']}.")
+        if product["promotion_active"]:
+            lines.append(f"  List price: BRL {product['list_price_brl']}; active promotion: {product['discount_percent']}% off. "
+                         "The extra 5% PIX discount does not apply.")
+        else:
+            lines.append(f"  No active promotion is recorded. With the separate 5% PIX payment discount: BRL {product['pix_price_brl']}.")
+        if not product["available"]:
+            lines.append("  This instrument is not currently available for purchase.")
+    lines.append("\nThese are source-file records, not a live stock guarantee. Would you like to compare specific models?")
+    return "\n".join(lines)
 
 
 class ModelError(Exception):
@@ -134,7 +163,37 @@ class Agent:
                             **({"tool_calls": calls} if calls else {})})
             if not calls:
                 answer = message.get("content") or "I couldn't verify that. Please contact the store team."
-                # Fresh evidence required for factual turns; prompt compliance still needs evaluation.
+                if not self.last_trace:
+                    # Require evidence even if the model prematurely produces a final answer.
+                    if text.strip().lower().rstrip("!.") not in {"hi", "hello", "thanks", "thank you", "ola", "oi"}:
+                        # Explicit fallback retrieval also supports elliptical follow-ups,
+                        # where the model would otherwise reuse old evidence indefinitely.
+                        query = " ".join(m["content"] for m in prior + current if m["role"] == "user")[-300:]
+                        args = {"query": query}
+                        result = self.dispatch("search_policies", args)
+                        current[-1] = {"role": "assistant", "content": "", "tool_calls": [
+                            {"function": {"name": "search_policies", "arguments": args}}]}
+                        current.append({"role": "tool", "tool_name": "search_policies",
+                                        "content": json.dumps(result, ensure_ascii=False)})
+                        self.last_trace.append({"tool": "search_policies", "arguments": args, "result": result})
+                        continue
+                policy_pages = sorted({p["page"] for trace in self.last_trace
+                                       if trace["tool"] == "search_policies"
+                                       for p in trace["result"].get("passages", [])})
+                if any(t["result"].get("error") == "authentication_required" for t in self.last_trace):
+                    answer = "For your privacy, I can only share order details through the store's authenticated channel. A customer ID or order number in chat does not verify identity. I cannot disclose customer emails. Please contact the store team through a verified channel."
+                    current[-1]["content"] = answer
+                product_traces = [t for t in self.last_trace if t["tool"] == "search_products" and "products" in t["result"]]
+                if product_traces:
+                    # A small model can confuse product status with promotion status.
+                    # Render trusted facts directly instead of accepting generated prices.
+                    answer = render_catalog(product_traces)
+                    if policy_pages:
+                        answer += "\n\nFor the separate policy question, please ask a follow-up so I can explain it clearly."
+                    current[-1]["content"] = answer
+                if policy_pages:
+                    answer += "\n\nPolicy evidence: store_policies.pdf, pp. " + ", ".join(map(str, policy_pages)) + "."
+                    current[-1]["content"] = answer
                 self.history.append(current)
                 self.history = self.history[-4:]
                 return answer

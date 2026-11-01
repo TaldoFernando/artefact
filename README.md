@@ -74,6 +74,12 @@ Policy retrieval ranks the eight original PDF pages by normalized term coverage,
 small English-to-Portuguese keyword aliases. It returns the three highest-scoring pages
 and page numbers. Full pages preserve nearby caveats and conflicting sections. This is
 simple and inspectable, but less robust to paraphrases than multilingual embeddings.
+If the model attempts an answer without evidence, the application retrieves policy
+pages using the recent user context before allowing another generation. Catalog
+answers are rendered directly from tool records: this prevents the model confusing
+an active product with an active promotion, or rewriting a calculated price. This
+prioritizes reliable facts over open-ended product recommendations. Mixed catalog
+and policy requests ask for a separate policy follow-up.
 
 **Local LLM.** Qwen3 8B supports tool calling and Portuguese/English. Local inference
 avoids API fees and sending the internal manual to a hosted inference provider. It also
@@ -143,6 +149,15 @@ tool argument rejection, loop bounds, memory bounds and provider failure. Script
 fixtures test orchestration, **not the real model's reasoning**. `scripts/evaluate.py`
 requires a running Ollama and writes actual transcripts to `examples/`. Review the
 transcripts manually against source data; tool use alone does not establish answer quality.
+The current suite contains 21 passing tests. During real-model evaluation, category
+misclassification hid a named product, promotion status was confused with product
+status, and policy follow-ups skipped fresh retrieval. The implementation now retries
+named products across categories, renders catalog facts deterministically and retrieves
+policy evidence on otherwise ungrounded turns. See `examples/` for actual final outputs.
+
+The optional PDF builder requires `reportlab` (`python -m pip install reportlab`):
+`python scripts/build_summary.py --evaluated --repository-url https://github.com/OWNER/REPO`.
+The URL must be the actual published repository. Without it, the output is marked draft.
 
 ## Limitations and next steps
 
@@ -152,6 +167,10 @@ formal legal review or price guarantee. Lexical retrieval and name-token matchin
 miss synonyms. Policy language and factual correctness rely partly on the model; prompt
 injection remains possible despite a read-only tool allowlist. Trace output contains
 internal policy excerpts. Local files can be malformed or edited outside this app.
+In the recorded local evaluation, return-policy follow-ups still repeated information
+requests and could phrase eligibility too broadly before clarifying the purchase channel.
+These are observed limitations, not passing assertions. Refund eligibility must remain
+with the human team. The scope response also used redundant wording about accessories.
 
 With more time: evaluate paraphrases and adversarial prompts on a labeled dataset;
 introduce multilingual retrieval only if it improves measured recall; add schema and

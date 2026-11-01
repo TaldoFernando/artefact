@@ -56,7 +56,7 @@ def main():
     p("The manual contains conflicting contact and installment information, an undefined shipping boundary at exactly BRL 500, and overlapping exchange and warranty guidance. Mel is instructed to acknowledge uncertainty and request human confirmation. It must not approve refunds or decide statutory rights.")
     p("Order records do not contain the actual receipt date or purchase channel. Online return discussions therefore ask for these facts rather than inferring them from estimated delivery. Complaints, returns and reservations are advisory only; the agent cannot claim they were processed.")
     heading("Validation and examples")
-    p("The automated suite passes 19 tests covering catalog filters, pricing, inactive promotions, fresh CSV reads, policy retrieval, order ownership, invalid tool calls, provider errors and loop/memory limits. Scripted responses validate the orchestration protocol and do not establish real-model quality.")
+    p("The automated suite passes 21 tests covering catalog filters, pricing, inactive promotions, fresh CSV reads, policy retrieval, order ownership, invalid tool calls, provider errors and loop/memory limits. Scripted responses validate the orchestration protocol and do not establish real-model quality.")
     p("Five real-model conversations are included in examples/ and cover catalog search, general information, returns, promotion stacking, privacy and scope." if args.evaluated else "A five-scenario real-model evaluation script is provided. Real-model execution is still pending; no fabricated transcripts are presented as model output.")
     story.append(PageBreak())
     heading("Running the project")
