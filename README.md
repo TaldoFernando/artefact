@@ -1,196 +1,369 @@
-# Empório da Música - grounded customer support agent
+# Empório da Música - AI Customer Support Agent
 
-Python prototype for the Artefact AI Engineer technical challenge. Mel helps customers
-find instruments and answers store questions using the supplied CSV files and policy PDF.
-All authored documentation and evaluation answers are in English; original Portuguese
-source data are preserved unchanged.
+A Python prototype for the **Artefact AI Engineer technical challenge**. Mel is a
+friendly, informal but professional text assistant for the fictitious musical-instrument
+store in Campo Grande/MS. It combines local LLM tool calling, structured CSV lookups and
+retrieval from the original store-policy PDF. All authored documentation and responses
+are in English; Portuguese source data and original product names are preserved.
 
-## Run locally
+## Architecture
 
-Requires Python 3.11+, [Ollama](https://docs.ollama.com/quickstart), and a machine capable
-of running [Qwen3 8B](https://ollama.com/library/qwen3:8b). The model download is about
-5.2 GB; runtime memory depends on context and hardware. No paid API or API key is used.
+```mermaid
+flowchart TD
+    CLI[CLI: one local session] --> Agent[Agent: persona and four complete turns]
+    Agent --> Model[Ollama / Qwen3 8B]
+    Model -->|tool calls| Tools[Allowlisted read-only Python tools]
+    Tools --> CSV[Six supplied CSV fixtures]
+    Tools --> PDF[PDF extraction and lexical page retrieval]
+    CSV --> Evidence[Validated tool results]
+    PDF --> Evidence
+    Evidence --> Model
+    Model --> Final[Compose final response]
+    Evidence -->|catalog and order facts| Final
+    Final --> CLI
+```
 
-From the repository root:
+The LLM interprets the message and chooses among six tools: `search_products`,
+`get_product_details`, `get_active_promotions`, `recommend_products`, `order_status`
+and `search_policies`. Arguments are checked before dispatch. The loop permits at
+most five model rounds and four tool calls per round. Lookup failures are returned as
+errors, not successful evidence. HTTP, timeout and malformed-model errors produce a
+clear message instead of an unhandled exception.
+
+Products and orders are rendered directly from retrieved records, so the model cannot
+rewrite their numerical facts. Beginner recommendations select up to three available
+models whose original descriptions explicitly mention beginners, students or starting
+practice, restricted to the previous search's returned candidates. Recognized policy
+topics use reviewed English notes tied to the exact original PDF SHA-256, with source
+sections and pages returned as evidence. Other policy prose is generated from retrieved
+pages and receives application-added citations. A mixed
+product/policy turn retains both the catalog facts and the policy explanation.
+
+If the model tries to answer a non-greeting without any lookup, the application performs
+fallback policy retrieval using recent user context and requests another generation.
+An explicit order number triggers an application lookup using the trusted identity; it
+never establishes identity itself. Missing policy evidence in a mixed turn is prefetched.
+Traces identify these lookups with `origin: application_prefetch`.
+Empty policy retrieval or only failed lookups cannot authorize an unsupported final
+answer. Retrieval relevance and generated policy wording still require evaluation.
+
+## Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| Python 3.11+ | Main implementation; clean-environment checks used Python 3.12 |
+| Ollama + Qwen3 8B | Local LLM inference and native tool calling; no paid API |
+| Standard-library `urllib` | HTTP adapter in `emporio/model.py` |
+| Standard-library `csv`, `json`, `Decimal`, `datetime` | File queries, specifications, exact money calculations and date validation |
+| `pypdf` >=5,<7 | Extract the eight-page policy manual |
+| `zoneinfo`; `tzdata` on Windows | Campo Grande time zone |
+| `unittest`, `unittest.mock` | Offline regression tests and scripted model fixtures |
+| CLI / `argparse` | Interactive interface; no web or WhatsApp deployment |
+| Optional ReportLab | Existing PDF overview builder, separate from the runtime |
+
+No agent framework, SQL database, embeddings service or vector database is required.
+Dependency ranges are declared in `pyproject.toml`; this is not a fully locked dependency
+set. The clean environment installed `pypdf 6.21.4` during this audit.
+
+## Getting Started
+
+Install Python 3.11+ and [Ollama](https://docs.ollama.com/quickstart). Qwen3 8B needs an
+initial model download of about 5.2 GB and enough memory for inference and the configured
+context. There is no inference API fee, but local compute, storage and electricity have
+costs. The source data are already included under `data/`; no import or migration is needed.
+
+**Repository publication is pending.** After publication, replace the explicitly marked
+URL below with the actual public repository URL. A public clone has not yet been tested.
+With an existing checkout, start at the virtual-environment step from its root.
+
+```sh
+git clone <PUBLIC_REPOSITORY_URL> emporio-assistant
+cd emporio-assistant
+```
+
+macOS/Linux:
 
 ```sh
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-ollama pull qwen3:8b
+cp .env.example .env
+set -a
+. ./.env
+set +a
+```
+
+The `.env` file is a convenience for a shell to load. **The Python application reads
+process environment variables and does not automatically load `.env`.** Do not commit
+credentials or replace the supplied fictitious fixtures with real customer data.
+
+Start Ollama in a separate terminal if it is not already running:
+
+```sh
 ollama serve
 ```
 
-If Ollama already runs in the background, skip `ollama serve`. In another terminal,
-activate the same environment and run:
+Back in the activated Python environment:
+
+```sh
+ollama pull qwen3:8b
+python scripts/validate_data.py
+python -m emporio.cli
+```
+
+The editable installation also exposes `emporio`. Both invocations support
+`--data-dir PATH` and `--trace`. Run from the repository root unless supplying a data
+directory. Type `/reset` to clear memory, tool traces and recommendation candidates;
+`/quit`, EOF or Ctrl-C exits.
+
+Windows PowerShell equivalents (documented, not executed in this macOS audit):
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e .
+$env:OLLAMA_HOST = "http://localhost:11434"
+$env:OLLAMA_MODEL = "qwen3:8b"
+# Start ollama serve in another terminal if needed.
+ollama pull qwen3:8b
+python scripts/validate_data.py
+python -m emporio.cli
+```
+
+## Model Configuration
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OLLAMA_HOST` | `http://localhost:11434` | Trusted Ollama HTTP endpoint; a host without a scheme is also accepted |
+| `OLLAMA_MODEL` | `qwen3:8b` | Locally pulled, tool-capable model tag |
+
+No API key is used. The adapter disables streaming and thinking, uses temperature zero,
+a 16,384-token context and a 1,600-token output limit per model call, with a 180-second
+HTTP timeout. A 404 reports the missing model; connectivity and malformed-response
+errors are reported explicitly. Use a trusted endpoint: prompts may contain user text
+and retrieved internal policy passages.
+
+Only the Ollama protocol is implemented. Changing a model tag does not establish that
+its tool calling or response quality works; rerun the evaluation. Temperature zero is
+not a correctness guarantee, and model tags are mutable. The real-run records include
+the model digest, Ollama/Python versions, base Git commit and exact source file hashes.
+See the [Ollama chat API](https://docs.ollama.com/api/chat),
+[tool-calling protocol](https://docs.ollama.com/capabilities/tool-calling) and
+[Qwen3 8B model page](https://ollama.com/library/qwen3:8b).
+
+## Technical Decisions
+
+**Agent approach.** A hybrid of function calling and lexical RAG matches the distinction
+between operational records and written policies. Explicit read-only tools expose a
+smaller, inspectable interface than an unrestricted SQL or code-execution agent. A small
+Python loop makes dispatch, authorization and failure behavior easy to review.
+
+**LLM.** The candidate explicitly chose local Ollama without a paid API. Qwen3 8B offers
+Portuguese/English understanding and tool support while fitting a local prototype.
+A small model has lower local resource requirements than much larger models but can
+misclassify products or omit policy conditions. Real runs revealed such errors, so
+numerical facts and order results are now rendered by Python instead of rewritten by
+the model. Actual latency depends on hardware and warm-model state; no SLA is claimed.
+
+**Retrieval.** `pypdf` extracts original text once when a session starts. Normalized
+lexical scoring ranks the eight manual pages, using small English-to-Portuguese hints
+for concepts such as returns, hours, Saturday, payment, customized instruments and
+tracking. The three highest-ranked pages are returned, plus all source pages cited by
+recognized reviewed notes; a result can therefore contain more than three pages. Whole pages retain
+nearby conditions and exceptions. This avoids infrastructure disproportionate to eight
+pages; it is weaker on unfamiliar paraphrases than multilingual semantic retrieval.
+`emporio/policy_notes.py` contains reviewed English summaries of the supplied manual.
+Their exact-PDF hash check disables them if the document changes, so stale translations
+are not silently reused. Recognized scope, privacy, payments and return topics use these
+source-bound summaries as the final policy text; unfamiliar topics use generated prose.
+This deliberately prioritizes complete conditions over model fluency for sensitive rules.
+
+**Structured data.** Every tool call reopens the CSVs it needs. Prices, stock, status,
+promotions and ownership are handled by Python. `Decimal` uses two-place half-up rounding.
+Only `is_active == 1` enables a campaign; a campaign name does not establish current
+dates. Multiple active campaigns for one product use the largest percentage without
+stacking (an explicit assumption). PIX gives 5% off list price only without an active
+promotion. Price filters use the effective campaign/list price before a separate PIX
+discount. A named-product query with a mistaken category retries across categories.
+
+**Prompting.** Mel follows the manual's friendly but professional tone. Instructions
+require evidence, keep tool text untrusted, limit scope to musical instruments and forbid
+claims of completed transactions. The prompt flags conflicting contacts, installment
+minimums, warranty/exchange provisions and undefined shipping at exactly BRL 500. Policy
+responses remain model-generated; prompt instructions are not a security proof.
+
+**Conversation history.** Four complete turns are retained in process, with the previous
+search candidates for recommendation follow-ups. There is no automatic disk chat log,
+cross-session identity or multiuser isolation service. `/reset` clears all session state.
+The separate evaluation script deliberately saves synthetic test sessions and evidence.
+
+**Data preparation.** Original files are unchanged, including all six CSVs. The policy
+PDF filename was normalized to `store_policies.pdf`. Startup validates positive unique
+keys, relationships, monetary values, stock, known statuses, ISO dates, promotion flags,
+item quantities and JSON specification objects. Optional blank tracking/estimate fields
+become `None` when presented. Unicode normalization is used for searches, not to rewrite
+the originals. `python scripts/validate_data.py` prints counts without customer fields.
+
+| File | Runtime use |
+|---|---|
+| Products (65 rows) | Name/category/price/stock/status, descriptions and JSON specifications |
+| Categories (9 rows) | Referential-integrity validation; category IDs are described in the tool schema |
+| Promotions (25 rows) | Active flags and nonstacking percentage calculations |
+| Orders (20 rows) | Ownership-filtered status, tracking and stored delivery estimate |
+| Order items (22 rows) | Authorized order-item quantities joined to product names |
+| Customers (50 rows) | Referential-integrity validation only; names, phones and emails are not exposed to the model |
+
+Historical order totals are not recomputed from today's catalog prices. `estimated_delivery`
+is not actual receipt, and orders lack purchase-channel information. The files remain a
+supplied snapshot, even when reread; there is no ERP, live carrier or inventory reservation.
+
+## Features
+
+- Product search by normalized name tokens, category, minimum/maximum effective price and
+  availability; up to ten results with explicit truncation metadata.
+- Single-product details including description, specifications and prices; explicit
+  active-promotion lookup and no stacked PIX discounts.
+- Source-based beginner recommendations from previous search results, rechecked for stock.
+- Order lookup through a **trusted application identity seam**, with ownership checks,
+  minimal item/status/tracking data and indistinguishable foreign/missing-order errors.
+  The CLI has no login and cannot supply this identity. A claimed ID in chat is not proof.
+- PDF-backed store information, payments, returns, exchanges, warranty and delivery guidance.
+- Mixed catalog/policy responses and session follow-ups.
+- Scope redirection, read-only tool allowlisting, bounded loops and provider failure messages.
+
+No tool can approve a refund, change an order, reserve an instrument, register a complaint
+or notify a human. Handoff is advice to contact the team, not an executed action.
+
+## Usage Examples
 
 ```sh
 python -m emporio.cli
-# Optional local debugging: show tool calls, sources and retrieved passages.
+# Local development only: print source evidence after each response.
 python -m emporio.cli --trace
 ```
 
-Type `/reset` to clear memory or `/quit` to exit. Examples:
+Short excerpt from a real catalog response:
 
 ```text
-Which acoustic guitars are available for up to BRL 1,000?
-How much is the Takamine GD20?
-What is the store address?
-I received an online purchase five days ago. Can I return it?
+Customer: How much is the Takamine GD20?
+Mel: Takamine GD20 Dreadnought Natural: BRL 2199.00.
+     No active promotion is recorded.
+     With the separate 5% PIX payment discount: BRL 2089.05.
 ```
 
-The application defaults to `OLLAMA_HOST=http://localhost:11434` and
-`OLLAMA_MODEL=qwen3:8b`. Override these environment variables if needed. Use a trusted
-local Ollama host: requests contain user messages and retrieved internal policy text.
-The CLI intentionally has no customer identity override. A model-not-found response
-means the model needs to be pulled; connection errors usually mean Ollama is not running.
-Run from the repository root or pass `--data-dir /absolute/path/to/data`.
+This is a shortened excerpt, not a full transcript. Exact messages, full responses, tool
+calls, ground truth and reviewed results are in:
 
-## Design and tradeoffs
+- [Product search, beginner recommendation and combined sources](examples/01_product_search.md)
+- [Address, Saturday hours and payment](examples/02_store_information.md)
+- [Order ownership and a trusted test fixture](examples/03_order_tracking.md)
+- [Online return, customization and processing limits](examples/04_return_policy.md)
+- [Scope, prompt injection and recovery](examples/05_out_of_scope.md)
 
-```text
-CLI -> Agent (persona + last four complete turns)
-         -> local Ollama /api/chat (Qwen3 8B, temperature 0)
-         -> bounded tool loop (five rounds, max four calls per round)
-             -> search_products: fresh CSV reads + Decimal pricing
-             -> search_policies: ranked original PDF pages with page citations
-             -> order_status: application identity + ownership check
-         -> customer answer
-```
+See the [conversation validation index](examples/README.md) for the final results and
+limitations. Public conversations use no real authentication credentials. The order
+session with fixture identity 2 is clearly separate from the unauthenticated session.
 
-**Function calling instead of a framework or unrestricted SQL agent.** Three explicit
-read-only Python tools make the trust boundary visible. The model chooses tools; Python
-validates arguments, filters rows and computes prices. The model never receives an SQL
-execution interface or filesystem tool. The small dataset does not justify a database,
-vector service or orchestration framework. See [Ollama's tool-calling protocol](https://docs.ollama.com/capabilities/tool-calling)
-and [chat API](https://docs.ollama.com/api/chat).
+## Testing
 
-**Hybrid structured lookup and lexical RAG.** Structured data answer stock, price,
-promotion and order questions. Product search matches all normalized name tokens and
-supports category, effective price and availability filters. Category IDs are in the tool
-description; the model maps natural language to them. Results include truncation metadata
-and are limited to ten items. A named unavailable product can be inspected explicitly.
-Policy retrieval ranks the eight original PDF pages by normalized term coverage, with
-small English-to-Portuguese keyword aliases. It returns the three highest-scoring pages
-and page numbers. Full pages preserve nearby caveats and conflicting sections. This is
-simple and inspectable, but less robust to paraphrases than multilingual embeddings.
-If the model attempts an answer without evidence, the application retrieves policy
-pages using the recent user context before allowing another generation. Catalog
-answers are rendered directly from tool records: this prevents the model confusing
-an active product with an active promotion, or rewriting a calculated price. This
-prioritizes reliable facts over open-ended product recommendations. Mixed catalog
-and policy requests ask for a separate policy follow-up.
-
-**Local LLM.** Qwen3 8B supports tool calling and Portuguese/English. Local inference
-avoids API fees and sending the internal manual to a hosted inference provider. It also
-requires a model download and suitable hardware. Temperature zero improves repeatability
-but does not guarantee identical or correct answers. The model is configurable; a tag is
-not an immutable model version. Record `ollama list` and the Ollama version when evaluating.
-
-**Persona and grounding.** Mel is a welcoming, practical music-store assistant, following
-the manual's informal but professional tone. The system prompt requires fresh tool
-evidence for factual store answers, cites policy pages, distinguishes snapshots from
-live integrations, and redirects out-of-scope requests. Tool results are treated as
-untrusted data. These instructions reduce risk; they are not a proof of LLM compliance.
-
-**Memory.** Only the last four complete turns are retained in process. There is no disk
-chat log, cross-session memory or analytics. `/reset` and process exit discard history.
-This enables follow-up questions while limiting retained conversation data and context.
-
-## Data decisions and ambiguities
-
-- All six original CSVs and the policy PDF are retained under `data/`. The PDF filename
-  was normalized to `store_policies.pdf`; its contents are unchanged. The 65 products
-  include active, discontinued and coming-soon records. Only active items with positive
-  stock appear by default. Historical orders are not evidence of current availability.
-- Every product call reopens products and promotions, so file updates are reflected on
-  the next call. This is **fresh access to a supplied snapshot**, not a production ERP or
-  inventory guarantee. Multiple files are not read as a transactional snapshot.
-- Monetary operations use `Decimal` and two-place half-up rounding. A promotion applies
-  only if `is_active == 1`; campaign names do not establish current calendar validity.
-  There are no promotion dates. If several active rows applied to one product, use the
-  highest discount, never stack. That is an explicit prototype assumption.
-- PIX gets 5% off list price only when no active promotion applies. A promotional product
-  displays list price, discount and final price. `max_price` filters the promotional or
-  list price **before** any payment-specific PIX discount.
-- Order lookup is denied unless trusted application code supplies an authenticated
-  customer ID. A supplied email, order number or claimed customer ID is not authentication.
-  The CLI deliberately cannot authenticate; it directs users to an authenticated store
-  channel. Unit tests exercise the trusted integration seam, including ownership denial.
-  Returned order fields omit customer records, free-text notes and totals.
-- Orders have `estimated_delivery`, not actual receipt date or purchase channel. The
-  assistant must ask for actual receipt date and channel before discussing an online
-  regret-return window; it cannot infer eligibility from the order estimate.
-- The manual's payment summary and section 3.1 have different installment minimums.
-  Section 5.1 leaves exactly BRL 500 undefined. Section 1.2 and section 7 list different
-  WhatsApp numbers, and the email spelling also varies. These need human confirmation.
-- Defect exchanges (section 4.2), warranty (section 8) and return exclusions may overlap.
-  The assistant reports the manual as store guidance, avoids deciding legal rights, and
-  refers ambiguous cases to the team. It cannot approve, reject or process a refund.
-- Opening times are regular Campo Grande times (`America/Campo_Grande`). There is no
-  holiday calendar, so the assistant cannot guarantee the store is open on a given date.
-- Complaints are not persisted and handoff is advisory: the assistant cannot claim a
-  ticket was registered or a person notified. No transaction or write tools exist.
-
-The fixtures were supplied for a fictitious store. Do not substitute real customer data
-in a public repository. Customer and order-item CSVs are retained for provenance but are
-not sent to the model. Do not enable `--trace` in a public customer-facing deployment.
-
-## Validation
+Offline, after installation:
 
 ```sh
 python -m unittest discover -s tests -v
-python scripts/evaluate.py
+python scripts/validate_data.py
 ```
 
-The unit suite covers catalog filters, fresh file reads, active vs inactive promotions,
-nonstacking PIX, unavailable instruments, policy retrieval, authentication and ownership,
-tool argument rejection, loop bounds, memory bounds and provider failure. Scripted model
-fixtures test orchestration, **not the real model's reasoning**. `scripts/evaluate.py`
-requires a running Ollama and writes actual transcripts to `examples/`. Review the
-transcripts manually against source data; tool use alone does not establish answer quality.
-The current suite contains 21 passing tests. During real-model evaluation, category
-misclassification hid a named product, promotion status was confused with product
-status, and policy follow-ups skipped fresh retrieval. The implementation now retries
-named products across categories, renders catalog facts deterministically and retrieves
-policy evidence on otherwise ungrounded turns. See `examples/` for actual final outputs.
+The audited suite currently contains **46 tests**, executed successfully in a newly
+created environment. It covers existing/missing/unavailable products, price ranges,
+active/inactive promotions, parsed specifications, six-table validation, valid/missing/
+foreign orders, mocked policy and scope turns, combined sources, malformed tool payloads,
+lookup failures, HTTP failures, timeouts, memory reset and loop bounds. No coverage
+percentage has been measured. Scripted model fixtures verify orchestration and data
+handling; their canned final answers do **not** establish real-LLM semantic correctness.
 
-The optional PDF builder requires `reportlab` (`python -m pip install reportlab`):
-`python scripts/build_summary.py --evaluated --repository-url https://github.com/OWNER/REPO`.
-The URL must be the actual published repository. Without it, the output is marked draft.
+Real integration evaluation requires a running Ollama with the configured model:
 
-## Limitations and next steps
+```sh
+python scripts/evaluate.py
+# After a correction, rerun an individual scenario:
+python scripts/evaluate.py --scenario 04_return_policy
+```
 
-This is a CLI prototype, not a deployed WhatsApp integration. There is no production
-authentication, refund workflow, complaint queue, carrier lookup, inventory reservation,
-formal legal review or price guarantee. Lexical retrieval and name-token matching can
-miss synonyms. Policy language and factual correctness rely partly on the model; prompt
-injection remains possible despite a read-only tool allowlist. Trace output contains
-internal policy excerpts. Local files can be malformed or edited outside this app.
-In the recorded local evaluation, return-policy follow-ups still repeated information
-requests and could phrase eligibility too broadly before clarifying the purchase channel.
-These are observed limitations, not passing assertions. Refund eligibility must remain
-with the human team. The scope response also used redundant wording about accessories.
+The script executes actual `Agent.reply` calls, saves exact responses and tool results,
+and initially marks the files **PENDING REVIEW**. Review each against CSV/PDF sources,
+record PASS/PARTIAL/FAIL plus rationale, and rerun failed scenarios after corrections.
+JSON records under `reports/runs/` retain the execution metadata. Source-review annotations
+can be rendered without generating new answers using `--render-run PATH_TO_RUN_JSON`.
+Running the script overwrites the corresponding example files with the new unreviewed
+run; old records remain in `reports/runs/`.
+`python scripts/verify_run.py PATH_TO_RUN_JSON` independently checks recorded product/
+order values, source-commit hashes, review integrity and fixture customer-field leaks;
+it does not replace semantic review. Exact verified commands are in the conversation index.
 
-With more time: evaluate paraphrases and adversarial prompts on a labeled dataset;
-introduce multilingual retrieval only if it improves measured recall; add schema and
-referential-integrity validation; pin dependency and model versions; replace CSVs with
-transactional read-only APIs; integrate real identity, redacted observability and an
-auditable human handoff. Add a web UI only after the core support behavior is evaluated.
+The clean-environment package install, CLI help/start/reset/exit and offline suite were
+executed on macOS. Windows instructions are not platform-tested. Public repository clone
+verification is pending publication. The older PDF overview under `output/pdf/` belongs
+to the earlier prototype; the current audit reports and examples are authoritative.
 
-## AI-assisted workflow
+## Known Limitations
 
-OpenAI Codex was used to inspect the supplied files, draft the Python implementation,
-identify policy ambiguities, write regression tests and prepare English documentation.
-The code and tests were generated with AI assistance; source lookups and test runs were
-used to check the resulting behavior. Scripted fixtures are explicitly separated from
-real-model transcripts. The candidate must review the code, run it locally and be able to
-explain its assumptions and limitations. No claim is made that the work was unaided.
+- Static, historically dated fixtures; multiple CSV reads are not transactional. Stock
+  and delivery estimates are not live guarantees. Promotions have no validity dates.
+- No production login, OTP, WhatsApp integration, carrier API, refund processor or handoff
+  queue. Trusted fixture injection tests authorization, not a real user login.
+- Lexical retrieval and token matching may miss synonyms. Candidate recommendations
+  cover the returned page only and use explicit catalog wording, not expert advice.
+- Topic matching and generated policy prose can still miss paraphrases or be repetitive.
+  Reviewed policy notes must be rechecked and rebound if the PDF changes; their hash
+  guard prevents stale notes but does not automatically translate an updated manual.
+  Prompt injection is mitigated by minimal tools and prompts, not eliminated. No claim
+  of production security or universal correctness is made.
+- The manual conflicts on WhatsApp numbers, email spelling, installment minimums and
+  exchange/warranty handling; exactly BRL 500 local shipping is undefined. Escalate.
+  Customized online returns require human review rather than a categorical denial.
+- Regular hours use `America/Campo_Grande`; no holiday calendar is integrated.
+- Four turns bound history by count, not by token size. Long retrieved contexts can
+  exceed a model's context budget. There is no concurrent-session server or load test.
+- `--trace` and evaluation records include internal policy passages; keep them local
+  when substituting sensitive data. Supplied fixtures describe a fictitious store.
+- Dependency ranges and model tags are configurable, not a reproducibility lockfile.
+  Recorded model digests and source hashes document a tested run, not every future run.
+- Public GitHub publication and final submission are pending, outside this local audit.
 
-## Submission
+## Future Improvements
 
-The attached brief asks for a public GitHub repository with genuine incremental commits
-and 3-5 example conversations. The recruiting email additionally asks for an English PDF
-uploaded to its Google Form. Preserve the repository after the submission timestamp;
-do not rewrite the history or alter it after delivery. Follow the recruiting email's
-submission instructions and include the repository URL in the final PDF.
+1. Prioritize labeled policy/intent evaluation, adversarial tests and deterministic
+   handling of high-risk policy conditions before a customer deployment.
+2. Add authenticated identity, redacted observability and an auditable human handoff.
+3. Replace CSV reads with transactional, read-only operational APIs and real carrier data.
+4. Add context budgeting, model/dependency pinning and data-update validation.
+5. Evaluate multilingual retrieval against lexical recall before introducing a vector store.
+6. Add a web/WhatsApp channel, session isolation and load tests only after core validation.
+
+## AI-Assisted Development
+
+**OpenAI Codex** inspected the brief, CSVs, policy PDF and existing implementation, then
+assisted with Python changes, prompts, regression tests, real-run evaluation, source
+comparison and English documentation. Errors were identified through source checks,
+executed tests and real model conversations: examples include category misclassification,
+confusing product status with promotion status, repeated return questions and discarded
+mixed-source responses. Corrections were tested rather than assumed correct.
+
+The candidate explicitly chose **Ollama local, without a paid API** in this conversation.
+Other implementation choices were proposed and implemented with Codex assistance. No
+unrecorded claim is made about independent candidate authorship or review. Before
+submission, the candidate should review the implementation and audit findings, confirm
+which decisions they endorse, and be prepared to explain them. The repository preserves
+incremental Git history; no fabricated unaided development history is presented.
+
+## Audit and Submission
+
+- [Implementation and validation audit](reports/02_implementation_audit.md)
+- [README compliance audit](reports/03_readme_audit.md)
+- [Conversation validation](examples/README.md)
+
+The official brief requires a public GitHub repository, genuine incremental commits and
+3-5 varied conversations including a nontrivial case. The recruiting email also requests
+an English PDF uploaded through its form. Publication, adding the actual repository URL
+and submission remain separate steps. Preserve the repository after the delivery
+timestamp; do not alter it after submission.
