@@ -35,7 +35,7 @@ conversation outcomes, including failures before corrections, are separately doc
 | `Features` section | Met | Describes actual tools; CLI login and transaction limitations are explicit |
 | `Usage Examples` section | Met | Real start command, labeled shortened excerpt and relative links to full exact transcripts |
 | Relative links | Verified locally | Targets checked after report/example generation; external official references checked separately |
-| `Testing` section | Met | Offline vs real-model tests separated; actual count 45; no invented coverage |
+| `Testing` section | Met | Offline vs real-model tests separated; actual count 46; no invented coverage |
 | Integration dependencies | Met | Running Ollama and pulled model required; provenance recorded in JSON |
 | `Known Limitations` section | Met | Snapshot, no production auth/transactions, retrieval/model limits, policy conflicts, no platform/public-clone overclaim |
 | `Future Improvements` section | Met | Prioritized evaluation, real identity, handoff, source APIs, context control and channels |
