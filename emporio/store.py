@@ -1,6 +1,7 @@
 """Read-only, fresh-per-call CSV tools. Business arithmetic never belongs to the LLM."""
 import csv
 import json
+import hashlib
 import re
 import unicodedata
 from datetime import date, datetime, timezone
@@ -35,6 +36,11 @@ class Store:
             raise ValueError("available_only must be boolean")
         if category_id is not None and (type(category_id) is not int or not 1 <= category_id <= 9):
             raise ValueError("category_id must be an integer from 1 to 9")
+        if category_id is not None:
+            generic = {1: {"electric", "guitar", "guitars", "guitarra", "guitarras"},
+                       5: {"acoustic", "guitar", "guitars", "violao", "violoes"}}.get(category_id, set())
+            generic |= {"for", "a", "an", "beginner", "beginners", "iniciante", "iniciantes", "para"}
+            query = " ".join(t for t in normalize(query).split() if t not in generic)
         ceiling = None if max_price is None else Decimal(str(max_price))
         if ceiling is not None and (not ceiling.is_finite() or ceiling < 0):
             raise ValueError("max_price must be a finite non-negative number")
@@ -196,10 +202,13 @@ class Policies:
     def __init__(self, path):
         from pypdf import PdfReader
         self.pages = [(i + 1, p.extract_text() or "") for i, p in enumerate(PdfReader(path).pages)]
+        self.pdf_hash = hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
     def search_policies(self, query):
         if not isinstance(query, str) or not query.strip() or len(query) > 300:
             raise ValueError("query must contain 1-300 characters")
+        from .policy_notes import reviewed_notes
+        notes = reviewed_notes(query, self.pdf_hash)
         # English semantic hints map to the Portuguese source, without translating its facts.
         aliases = {
             "return": "arrependimento devolucao troca", "refund": "reembolso arrependimento",
@@ -218,6 +227,12 @@ class Policies:
         tokens = set(re.findall(r"[a-z0-9]{3,}", expanded)) - {"the", "and", "what", "how", "for", "can", "you", "are", "uma", "qual", "para", "que", "com"}
         ranked = sorted(((sum(min(normalize(t).count(w), 3) for w in tokens), n, t)
                          for n, t in self.pages), reverse=True)
+        chosen = {n: t for score, n, t in ranked[:3] if score > 0}
+        for note in notes:
+            for n, text in self.pages:
+                if n in note["pages"]:
+                    chosen[n] = text
         return {"source": "store_policies.pdf, v2.1 June 2025",
-                "passages": [{"page": n, "text": t} for score, n, t in ranked[:3] if score > 0],
+                "passages": [{"page": n, "text": t} for n, t in sorted(chosen.items())],
+                "reviewed_notes": notes, "pdf_sha256": self.pdf_hash,
                 "warning": "Internal policies may conflict. Do not adjudicate legal rights; escalate unclear cases."}

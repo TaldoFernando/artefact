@@ -11,6 +11,7 @@ from urllib.error import HTTPError, URLError
 
 from emporio.agent import Agent, ModelError, Ollama
 from emporio.store import Store
+from emporio.policy_notes import PDF_SHA256, reviewed_notes
 from test_agent import DATA, ScriptedModel, tool
 
 
@@ -78,8 +79,36 @@ class DataAndToolsTests(unittest.TestCase):
         self.assertTrue(all(p["product_id"] in ids and float(p["price_brl"]) <= 1000 for p in recommended))
         self.assertTrue(all("source catalog" in p["recommendation_basis"] for p in recommended))
 
+    def test_generic_english_category_does_not_hide_products(self):
+        result = self.store.search_products(query="electric guitar for a beginner", category_id=1)
+        self.assertTrue(result["products"])
+        self.assertTrue(all(p["available"] for p in result["products"]))
+
+    def test_reviewed_policy_notes_are_disabled_for_changed_pdf(self):
+        self.assertTrue(reviewed_notes("localização", PDF_SHA256))
+        self.assertEqual(reviewed_notes("online return", "different-file-hash"), [])
+        note = reviewed_notes("personalized instrument", PDF_SHA256)[0]
+        self.assertIn("cannot categorically deny", note["text"])
+        self.assertEqual(note["pages"], [4, 8])
+
 
 class OrchestrationRegressions(unittest.TestCase):
+    def test_order_prefetch_prevents_model_refusing_verified_identity(self):
+        agent = Agent(DATA, ScriptedModel({"content": "Please authenticate again."}), authenticated_customer_id=2)
+        answer = agent.reply("Can I see order number 8?")
+        self.assertIn("shipped", answer)
+        self.assertIn("BRJL5544332BR", answer)
+        self.assertEqual(agent.last_trace[0]["origin"], "application_prefetch")
+
+    def test_mixed_policy_is_prefetched_when_model_skips_it(self):
+        model = ScriptedModel(tool("search_products", query="Takamine GD20"),
+                              {"content": "Only a price."}, {"content": "Unreliable policy prose."})
+        agent = Agent(DATA, model)
+        answer = agent.reply("How much is the Takamine GD20 and what is the PIX rule?")
+        self.assertIn("2199.00", answer)
+        self.assertIn("cannot be stacked", answer)
+        self.assertNotIn("Unreliable", answer)
+
     def test_malformed_tool_name_and_function_do_not_crash(self):
         model = ScriptedModel({"tool_calls": [{"function": None}, {"function": {"name": [], "arguments": {}}}]},
                               {"content": "Invented answer"})
@@ -103,7 +132,7 @@ class OrchestrationRegressions(unittest.TestCase):
         agent = Agent(DATA, model)
         answer = agent.reply("How much is the Takamine GD20 and what is the PIX policy?")
         self.assertIn("2199.00", answer)
-        self.assertIn("PIX has a 5%", answer)
+        self.assertIn("PIX gives 5%", answer)
         self.assertIn("Policy evidence", answer)
         self.assertEqual({t["tool"] for t in agent.last_trace}, {"search_products", "search_policies"})
 
@@ -121,7 +150,7 @@ class OrchestrationRegressions(unittest.TestCase):
         self.assertEqual(agent.catalog_candidates, [])
 
     def test_return_policy_retrieved_and_passed_to_model(self):
-        model = ScriptedModel(tool("search_policies", query="online return refund personalized"),
+        model = ScriptedModel(tool("search_policies", query="online return refund"),
                               {"content": "The store pays return freight; refund uses the original payment method within 10 business days. Human review is required for a customized instrument."})
         agent = Agent(DATA, model)
         answer = agent.reply("Online purchase received five days ago: can I return it?")

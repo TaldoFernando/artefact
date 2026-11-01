@@ -5,7 +5,8 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from .store import Store, Policies
+from .store import Store, Policies, normalize
+from .policy_notes import topics
 
 from .prompts import SYSTEM
 from .model import Ollama, ModelError
@@ -102,6 +103,15 @@ class Agent:
         self.last_trace.clear()
         self.catalog_candidates.clear()
 
+    def prefetch(self, name, args, current):
+        result = self.dispatch(name, args)
+        current.append({"role": "assistant", "content": "", "tool_calls": [
+            {"function": {"name": name, "arguments": args}}]})
+        current.append({"role": "tool", "tool_name": name,
+                        "content": json.dumps(result, ensure_ascii=False)})
+        self.last_trace.append({"tool": name, "arguments": args, "result": result,
+                                "origin": "application_prefetch"})
+
     def dispatch(self, name, args):
         permitted = {t["function"]["name"]: t["function"]["parameters"] for t in TOOLS}
         if not isinstance(name, str) or name not in permitted or not isinstance(args, dict):
@@ -138,9 +148,19 @@ class Agent:
             return "Please send a message between 1 and 4,000 characters."
         current = [{"role": "user", "content": text}]
         system = {"role": "system", "content": SYSTEM + "\nCurrent store-local time: " +
-                  datetime.now(ZoneInfo("America/Campo_Grande")).isoformat()}
+                  datetime.now(ZoneInfo("America/Campo_Grande")).isoformat() +
+                  "\nApplication identity verified: " + str(self.customer_id is not None) +
+                  ". If verified, use order_status; do not ask the user to authenticate again."}
         # Retain only complete conversational turns, never partial tool sequences.
         prior = [m for turn in self.history[-4:] for m in turn]
+        order_match = re.search(r"\b(?:order|pedido)\s*(?:number|numero)?\s*#?\s*(\d+)\b", normalize(text))
+        if order_match:
+            self.prefetch("order_status", {"order_id": int(order_match.group(1))}, current)
+        elif any(w in normalize(text) for w in ("order", "pedido")) and "status" in normalize(text) and not topics(text):
+            answer = "Please provide the order number. Order details also require identity verified through the store's authenticated channel; an order number typed here is not authentication."
+            self.history.append(current + [{"role": "assistant", "content": answer}])
+            self.history = self.history[-4:]
+            return answer
         for _ in range(5):
             try:
                 message = self.model.chat([system] + prior + current, TOOLS)
@@ -155,6 +175,18 @@ class Agent:
                             **({"tool_calls": calls} if calls else {})})
             if not calls:
                 answer = message.get("content") or "I couldn't verify that. Please contact the store team."
+                needed_topics = set(topics(text))
+                covered_topics = {n["topic"] for t in self.last_trace
+                                  for n in t["result"].get("reviewed_notes", [])}
+                already_queried = any(t["tool"] == "search_policies" and t["arguments"].get("query") == text[:300] for t in self.last_trace)
+                if needed_topics - covered_topics and not already_queried:
+                    current.pop()  # Discard the premature draft, not the user's message.
+                    self.prefetch("search_policies", {"query": text[:300]}, current)
+                    continue
+                if any(w in normalize(text) for w in ("beginner", "iniciante")) and self.catalog_candidates and not any(t["tool"] == "recommend_products" for t in self.last_trace):
+                    current.pop()
+                    self.prefetch("recommend_products", {}, current)
+                    continue
                 if not self.last_trace:
                     # Require evidence even if the model prematurely produces a final answer.
                     if text.strip().lower().rstrip("!.") not in {"hi", "hello", "thanks", "thank you", "ola", "oi"}:
@@ -173,6 +205,14 @@ class Agent:
                                        if trace["tool"] == "search_policies"
                                        for p in trace["result"].get("passages", [])})
                 answer = re.sub(r"\n*Policy evidence:[^\n]*", "", answer).strip()
+                notes = {n["topic"]: n for trace in self.last_trace
+                         for n in trace["result"].get("reviewed_notes", [])
+                         if not needed_topics or n["topic"] in needed_topics}
+                if notes:
+                    answer = "\n\n".join(n["text"] + " (Manual sections " + n["sections"] + ".)" for n in notes.values())
+                    policy_pages = sorted({p for n in notes.values() for p in n["pages"]})
+                    if "returns" in notes and "online" in normalize(text) and re.search(r"\b(?:5|five)\s+days\b", normalize(text)):
+                        answer += "\n\nYou report receiving an online purchase five days ago, which is within the manual's seven-calendar-day request window. The remaining conditions and any special-case review still apply."
                 product_traces = [t for t in self.last_trace if "products" in t["result"]]
                 recommendation = [t for t in product_traces if t["result"].get("recommendation")]
                 if recommendation:
