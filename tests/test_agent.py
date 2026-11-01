@@ -2,9 +2,6 @@ import csv
 import json
 import tempfile
 import unittest
-from unittest.mock import patch
-from io import BytesIO
-from urllib.error import HTTPError, URLError
 from pathlib import Path
 from shutil import copytree
 

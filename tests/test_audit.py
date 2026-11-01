@@ -93,6 +93,15 @@ class DataAndToolsTests(unittest.TestCase):
 
 
 class OrchestrationRegressions(unittest.TestCase):
+    def test_missing_beginner_labels_do_not_hide_available_products(self):
+        model = ScriptedModel(tool("search_products", category_id=1, query="electric guitar for beginner"),
+                              tool("recommend_products"), {"content": "Unverified recommendation"})
+        answer = Agent(DATA, model).reply("Help me choose an electric guitar for a beginner")
+        self.assertIn("Fender", answer)
+        self.assertIn("do not explicitly label", answer)
+        self.assertIn("What is your budget", answer)
+        self.assertNotIn("couldn't find matching", answer)
+
     def test_order_prefetch_prevents_model_refusing_verified_identity(self):
         agent = Agent(DATA, ScriptedModel({"content": "Please authenticate again."}), authenticated_customer_id=2)
         answer = agent.reply("Can I see order number 8?")

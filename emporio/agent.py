@@ -47,6 +47,8 @@ def render_catalog(traces):
         if result.get("truncated"):
             lines.append(f"Showing {len(result['products'])} of {result['total_matches']} matches, sorted by price. Please narrow your search for more options.")
     if not products:
+        if any(t["result"].get("recommendation") for t in traces):
+            return "The previously returned descriptions do not explicitly identify a beginner or student model. I can't make a sourced beginner recommendation from those descriptions alone. What is your budget, and would you like to compare the available instruments?"
         return "I couldn't find matching instruments in the supplied catalog snapshot. Try a model name or a broader category; I cannot confirm availability beyond these records."
     for product in products.values():
         lines.append(f"\n- **{product['name']}**: BRL {product['price_brl']}. "
@@ -215,12 +217,19 @@ class Agent:
                         answer += "\n\nYou report receiving an online purchase five days ago, which is within the manual's seven-calendar-day request window. The remaining conditions and any special-case review still apply."
                 product_traces = [t for t in self.last_trace if "products" in t["result"]]
                 recommendation = [t for t in product_traces if t["result"].get("recommendation")]
+                recommendation_missing = recommendation and not any(t["result"]["products"] for t in recommendation)
                 if recommendation:
-                    product_traces = recommendation
+                    if not recommendation_missing:
+                        product_traces = recommendation
+                    else:
+                        searches = [t for t in product_traces if not t["result"].get("recommendation")]
+                        product_traces = searches or recommendation
                 if product_traces:
                     # A small model can confuse product status with promotion status.
                     # Render trusted facts directly instead of accepting generated prices.
                     catalog_answer = render_catalog(product_traces)
+                    if recommendation_missing and any(t["result"].get("products") for t in product_traces):
+                        catalog_answer += "\n\nThese descriptions do not explicitly label a beginner/student model, so I won't invent that suitability. What is your budget? We can compare the recorded specifications or ask the team for advice."
                     if policy_pages:
                         answer = catalog_answer + "\n\nPolicy guidance:\n" + answer
                     else:
