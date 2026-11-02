@@ -18,6 +18,10 @@ class Ollama:
         parsed = urlsplit(self.base_url)
         if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password:
             raise ValueError("OLLAMA_HOST must be an http(s) URL without credentials")
+        if parsed.path not in {"", "/"} or parsed.query or parsed.fragment:
+            raise ValueError("OLLAMA_HOST must be an origin without a path, query or fragment")
+        if parsed.port is not None and not 1 <= parsed.port <= 65535:
+            raise ValueError("OLLAMA_HOST port must be between 1 and 65535")
 
     def chat(self, messages, tools):
         payload = {"model": self.model, "messages": messages, "tools": tools,

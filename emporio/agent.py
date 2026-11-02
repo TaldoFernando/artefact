@@ -36,9 +36,9 @@ TOOLS = [
 ]
 
 
-def render_catalog(traces):
+def render_catalog(traces, *, compact=False, show_specs=True):
     """Render factual catalog answers from tool records, never from generated numbers."""
-    lines = ["Here's what I found in the supplied catalog snapshot (prices in BRL):"]
+    lines = ["Here are the verified catalog options (BRL):"]
     products = {}
     for trace in traces:
         result = trace["result"]
@@ -51,8 +51,8 @@ def render_catalog(traces):
             return "The previously returned descriptions do not explicitly identify a beginner or student model. I can't make a sourced beginner recommendation from those descriptions alone. What is your budget, and would you like to compare the available instruments?"
         return "I couldn't find matching instruments in the supplied catalog snapshot. Try a model name or a broader category; I cannot confirm availability beyond these records."
     for product in products.values():
-        lines.append(f"\n- **{product['name']}**: BRL {product['price_brl']}. "
-                     f"Stock: {product['stock_quantity']}; status: {product['status']}.")
+        availability = f"In stock: {product['stock_quantity']}" if product["available"] else f"Unavailable ({product['status']})"
+        lines.append(f"\n- **{product['name']}**: BRL {product['price_brl']}. {availability}.")
         if product["promotion_active"]:
             lines.append(f"  List price: BRL {product['list_price_brl']}; active promotion: {product['discount_percent']}% off. "
                          "The extra 5% PIX discount does not apply.")
@@ -62,9 +62,10 @@ def render_catalog(traces):
             lines.append("  This instrument is not currently available for purchase.")
         if product.get("recommendation_basis"):
             lines.append("  Why it fits: " + product["recommendation_basis"])
-        if product.get("specs"):
+        if product.get("specs") and show_specs and not compact:
             lines.append("  Recorded specifications: " + "; ".join(f"{k}: {v}" for k, v in product["specs"].items()) + ".")
-    lines.append("\nThese are source-file records, not a live stock guarantee. Would you like to compare specific models?")
+    if not compact:
+        lines.append("\nThese are source-file records, not a live stock guarantee. Would you like to compare specific models?")
     return "\n".join(lines)
 
 
@@ -99,11 +100,17 @@ class Agent:
         self.history = []
         self.last_trace = []
         self.catalog_candidates = []
+        self.catalog_constraints = {}
+        self.last_recommendations = []
+        self.last_rendered_products = set()
 
     def reset(self):
         self.history.clear()
         self.last_trace.clear()
         self.catalog_candidates.clear()
+        self.catalog_constraints.clear()
+        self.last_recommendations.clear()
+        self.last_rendered_products.clear()
 
     def prefetch(self, name, args, current):
         result = self.dispatch(name, args)
@@ -129,6 +136,8 @@ class Agent:
             if name == "search_products":
                 result = self.store.search_products(**args)
                 self.catalog_candidates = [p["product_id"] for p in result["products"]]
+                self.catalog_constraints = {k: args[k] for k in ("min_price", "max_price") if k in args}
+                self.last_recommendations = []
                 return result
             if name == "get_product_details":
                 return self.store.get_product_details(**args)
@@ -137,7 +146,9 @@ class Agent:
             if name == "recommend_products":
                 if not self.catalog_candidates:
                     return {"error": "search_required", "message": "Search the requested category and budget before recommending."}
-                return self.store.recommend_products(self.catalog_candidates)
+                result = self.store.recommend_products(self.catalog_candidates, **self.catalog_constraints)
+                self.last_recommendations = [p["product_id"] for p in result["products"]]
+                return result
             if name == "search_policies":
                 return self.policies.search_policies(**args)
             return self.store.order_status(**args, customer_id=self.customer_id)
@@ -189,6 +200,11 @@ class Agent:
                     current.pop()
                     self.prefetch("recommend_products", {}, current)
                     continue
+                payment_followup = needed_topics & {"pix", "payments"} and any(w in normalize(text).split() for w in ("those", "these", "them", "recommended", "esses", "essas"))
+                if payment_followup and self.last_recommendations and not any("products" in t["result"] for t in self.last_trace):
+                    current.pop()
+                    self.prefetch("recommend_products", {}, current)
+                    continue
                 if not self.last_trace:
                     # Require evidence even if the model prematurely produces a final answer.
                     if text.strip().lower().rstrip("!.") not in {"hi", "hello", "thanks", "thank you", "ola", "oi"}:
@@ -220,24 +236,36 @@ class Agent:
                 recommendation_missing = recommendation and not any(t["result"]["products"] for t in recommendation)
                 if recommendation:
                     if not recommendation_missing:
-                        product_traces = recommendation
+                        # Keep recommended models AND independently requested details.
+                        recommended_ids = {p["product_id"] for t in recommendation for p in t["result"]["products"]}
+                        extras = [{**t, "result": {**t["result"], "products": [p for p in t["result"]["products"] if p["product_id"] not in recommended_ids]}}
+                                  for t in product_traces if t["tool"] == "get_product_details"
+                                  or (t["tool"] == "search_products" and t["arguments"].get("query")
+                                      and t["result"].get("total_matches", 0) <= 3)]
+                        product_traces = recommendation + extras
                     else:
                         searches = [t for t in product_traces if not t["result"].get("recommendation")]
                         product_traces = searches or recommendation
+                sections = []
                 if product_traces:
                     # A small model can confuse product status with promotion status.
                     # Render trusted facts directly instead of accepting generated prices.
-                    catalog_answer = render_catalog(product_traces)
+                    rendered_ids = {p["product_id"] for t in product_traces for p in t["result"]["products"]}
+                    compact = bool(rendered_ids) and rendered_ids == self.last_rendered_products
+                    catalog_answer = render_catalog(product_traces, compact=compact,
+                                                    show_specs=any(t["tool"] == "get_product_details" for t in product_traces))
+                    self.last_rendered_products = rendered_ids
                     if recommendation_missing and any(t["result"].get("products") for t in product_traces):
                         catalog_answer += "\n\nThese descriptions do not explicitly label a beginner/student model, so I won't invent that suitability. What is your budget? We can compare the recorded specifications or ask the team for advice."
-                    if policy_pages:
-                        answer = catalog_answer + "\n\nPolicy guidance:\n" + answer
-                    else:
-                        answer = catalog_answer
+                    sections.append(catalog_answer)
                 order_traces = [t for t in self.last_trace if t["tool"] == "order_status"]
                 if order_traces:
                     order_answer = render_order(order_traces[-1]["result"])
-                    answer = order_answer + ("\n\nPolicy guidance:\n" + answer if policy_pages else "")
+                    sections.append(order_answer)
+                if policy_pages:
+                    sections.append(("Policy guidance:\n" if sections else "") + answer)
+                if sections:
+                    answer = "\n\n".join(sections)
                 has_evidence = product_traces or order_traces or policy_pages
                 if self.last_trace and not has_evidence:
                     answer = "I couldn't verify this from the available sources. Please clarify your request or contact the store team."

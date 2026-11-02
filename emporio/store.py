@@ -63,6 +63,7 @@ class Store:
             discounts = [Decimal(p["discount_percent"]) for p in promotions
                          if p["product_id"] == row["product_id"] and p["is_active"] == "1"]
             discount = max(discounts, default=Decimal(0))
+            promotion_active = bool(discounts)
             effective = Decimal(money(price * (100 - discount) / 100))
             if ceiling is not None and effective > ceiling:
                 continue
@@ -72,10 +73,10 @@ class Store:
                             "status": row["status"], "stock_quantity": int(row["stock_quantity"]),
                             "available": available, "list_price_brl": money(price),
                             "discount_percent": str(discount), "price_brl": money(effective),
-                            "promotion_active": bool(discount),
-                            "pix_price_brl": money(effective if discount else price * Decimal("0.95")),
-                            "pix_discount_applied": not bool(discount),
-                            "payment_rule": "PIX discount does not apply to promotional prices." if discount else "5% PIX discount available on list price.",
+                            "promotion_active": promotion_active,
+                            "pix_price_brl": money(effective if promotion_active else price * Decimal("0.95")),
+                            "pix_discount_applied": not promotion_active,
+                            "payment_rule": "PIX discount does not apply to promotional prices." if promotion_active else "5% PIX discount available on list price.",
                             "description": row["description"]})
         if not results and query.strip() and category_id is not None:
             # A model may misclassify a named instrument. Exact name evidence wins.
@@ -98,6 +99,8 @@ class Store:
         result = self.search_products(row["name"], available_only=False)
         product = next(p for p in result["products"] if p["product_id"] == product_id)
         product["specs"] = json.loads(row["specs"]) if row["specs"] else {}
+        if not isinstance(product["specs"], dict):
+            raise ValueError("Product specifications must be a JSON object")
         product["category_id"] = int(row["category_id"])
         product["created_at"] = date.fromisoformat(row["created_at"]).isoformat()
         result["products"] = [product]
@@ -112,7 +115,7 @@ class Store:
                 "products": products, "total_matches": len(products), "truncated": False,
                 "warning": "Only explicit is_active flags are used; campaign dates are unavailable."}
 
-    def recommend_products(self, candidate_ids):
+    def recommend_products(self, candidate_ids, min_price=None, max_price=None):
         """Select only from a previous, budget-filtered result; recheck availability."""
         candidates = []
         for product_id in candidate_ids:
@@ -120,6 +123,10 @@ class Store:
             if "products" not in result:
                 continue
             p = result["products"][0]
+            if min_price is not None and Decimal(p["price_brl"]) < Decimal(str(min_price)):
+                continue
+            if max_price is not None and Decimal(p["price_brl"]) > Decimal(str(max_price)):
+                continue
             description = normalize(p["description"])
             if p["available"] and any(word in description for word in ("iniciante", "estudante", "comecando", "estudo")):
                 p["recommendation_basis"] = "The source catalog describes this model for beginners, students, or starting practice."

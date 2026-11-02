@@ -19,6 +19,7 @@ SCENARIOS = [
      "phases": [(None, "Public catalog session", [
          "Which acoustic guitars do you have available for up to BRL 1,000?",
          "Which of those would you recommend for a beginner?",
+         "Can I pay for those with PIX?",
          "How much is the Takamine GD20? Is its old promotion active, and what does the store policy say about paying by PIX?"])]},
     {"id": "02_store_information", "objective": "Retrieve address, Saturday hours, accepted payment methods and PIX conditions across a conversation.",
      "ground_truth": "PDF p.2 sections 1.2/2: Rua 14 de Maio 3200, Centro, Campo Grande/MS, 79202-333; Saturday 09:00-13:00. PDF p.3 section 3: PIX, debit, credit, boleto. PDF p.6 section 6.2: no stacked PIX discount on promotions.",

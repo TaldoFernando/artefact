@@ -53,8 +53,8 @@ def main():
                     effective = cash(price * (100 - discount) / 100)
                     assert p["list_price_brl"] == cash(price)
                     assert p["price_brl"] == effective
-                    assert p["pix_price_brl"] == (effective if discount else cash(price * Decimal("0.95")))
-                    assert p["promotion_active"] == bool(discount)
+                    assert p["pix_price_brl"] == (effective if discounts else cash(price * Decimal("0.95")))
+                    assert p["promotion_active"] == bool(discounts)
                     if "specs" in p:
                         assert p["specs"] == json.loads(original["specs"])
                     checked_products += 1
