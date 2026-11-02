@@ -1,5 +1,8 @@
 # Deliverable 3 - README Compliance Audit
 
+> Final-review update (candidate-local date: 2026-11-01): the public repository is https://github.com/TaldoFernando/artefact and its published revision 0421ec4 was anonymously cloned, installed and tested (46 baseline tests passed). The current local final review has 55 passing tests and new full-model validation. New local commits have NOT been pushed. See [final review](05_final_review.md) for current outcomes; earlier counts and runs below are historical evidence.
+
+
 ## Method and result
 
 Read the existing README in full and compared it with the actual Python modules,
@@ -9,7 +12,7 @@ manual ambiguities and AI assistance. The complete corrected English document is
 [`../README.md`](../README.md); no duplicate README copy is maintained here.
 
 **Verdict: compliant for the documented local implementation, with delivery reservations.**
-A public repository URL/clone and Windows execution remain unverified. The actual
+A public URL and baseline clone are verified; final local updates await push authorization, and Windows/Linux execution remain unverified. The actual
 conversation outcomes, including failures before corrections, are separately documented.
 
 ## Requirement-by-requirement table
@@ -24,7 +27,7 @@ conversation outcomes, including failures before corrections, are separately doc
 | Final answer composition | Met | Numerical/order facts rendered from records; known policy notes rendered with source citations; unknown policy prose generated |
 | `Tech Stack` section | Met | Python, standard library, pypdf, Ollama, unittest, Windows tzdata, optional ReportLab |
 | `Getting Started` section | Met locally | Editable install, venv, data validation and CLI commands executed in a new environment |
-| Public clone command | Partial | Clearly marked URL placeholder because repository publication is pending; no invented URL |
+| Public clone command | PASS | Real URL is present; anonymous clone of public revision 0421ec4 was installed and its 46 baseline tests passed |
 | macOS/Linux and Windows instructions | Partial across platforms | macOS paths/behavior verified; PowerShell explicitly documented as untested |
 | Environment configuration | Met | Safe `.env.example`; process-environment behavior and shell loading explained |
 | Automatic `.env` loading not falsely claimed | Met | README explicitly states Python does not auto-load it; shell example checked |
@@ -44,7 +47,7 @@ conversation outcomes, including failures before corrections, are separately doc
 | Original-data use and unused fields | Met | All tables described; customer PII is validation-only and not exposed to the model |
 | Scope and privacy limits | Met | No customer-list tool, no identity established by chat claims, trace warnings |
 | Source ambiguities and assumptions | Met | Promotions, PIX, contacts, installments, exact BRL 500 boundary, returns and estimated dates |
-| Submission requirements | Partial at project level | Public repo/URL and final delivery remain pending; README states this transparently |
+| Submission requirements | Partial at project level | Public URL/clone verified; final local synchronization and candidate delivery remain pending |
 
 ## Technical inconsistencies corrected
 
@@ -69,9 +72,8 @@ conversation outcomes, including failures before corrections, are separately doc
    answers are not described as real model reasoning, and no coverage percentage is claimed.
 8. AI disclosure now distinguishes the candidate's recorded provider choice from choices
    proposed/implemented by Codex. No human review or unaided authorship is invented.
-9. The older PDF overview is identified as historical, not current evidence for the audit.
-10. Public clone and Windows commands are explicitly unverified, rather than asserting
-    complete cross-platform/public availability.
+9. The old 21-test PDF is replaced during final review using the executed validation record.
+10. Public clone setup is verified on macOS; Windows/Linux platform execution is explicitly unverified.
 
 ## Command verification
 
@@ -90,7 +92,7 @@ Executed in a new Python 3.12.14 venv on macOS:
   files contain the nine required sections. The four official Ollama reference URLs
   in the README were opened successfully.
 
-Not executed: actual clone from a public remote (none published), Windows PowerShell,
+Not executed: Windows/Linux platform execution, Windows PowerShell,
 a different model tag, production authentication, a refund or external handoff. These
 are not claimed as working features.
 
@@ -98,5 +100,5 @@ are not claimed as working features.
 
 The full, corrected [`README.md`](../README.md) is the deliverable. It preserves the
 working project's simple architecture and documents actual behavior, supported by
-source checks and executed tests. Candidate review, public publication and final
+source checks and executed tests. Candidate review, authorized synchronization and final
 submission are still required for the complete recruitment delivery.

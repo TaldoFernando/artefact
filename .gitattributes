@@ -1,0 +1,5 @@
+# Preserve original fixture bytes and prevent text/EOL conversion of PDFs.
+*.pdf binary
+data/*.csv -text
+# Raw command logs retain exact terminal prompts, including trailing spaces.
+reports/checks/*.txt whitespace=-blank-at-eol

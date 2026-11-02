@@ -10,8 +10,8 @@ Verify exact application responses against the supplied fixtures and PDF, not pl
 
 ## Execution details
 
-- Started UTC: 2026-11-01T20:11:49.955816+00:00
-- Code base commit: `8ebb7a8e23c1b972207bd957009048485a0ae8ec`. Exact source SHA-256 hashes are in the JSON run record.
+- Started UTC: 2026-11-02T02:32:30.162397+00:00
+- Code base commit: `5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b`. Exact source SHA-256 hashes are in the JSON run record.
 - Model: `qwen3:8b`; digest: `500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41`.
 - Ollama: `0.40.13`; Python: `3.12.14`.
 - Temperature 0; thinking disabled; context 16,384; output limit 1,600 tokens per model call.
@@ -186,21 +186,21 @@ Policy evidence: store_policies.pdf, pp. 7, 8.
 
 **Mel:**
 
-Here's what I found in the supplied catalog snapshot (prices in BRL):
+Here are the verified catalog options (BRL):
 
-- **Fender Telecaster Player Series**: BRL 5400.00. Stock: 15; status: active.
+- **Fender Telecaster Player Series**: BRL 5400.00. In stock: 15.
   No active promotion is recorded. With the separate 5% PIX payment discount: BRL 5130.00.
 
-- **PRS SE Custom 24**: BRL 6800.00. Stock: 12; status: active.
+- **PRS SE Custom 24**: BRL 6800.00. In stock: 12.
   No active promotion is recorded. With the separate 5% PIX payment discount: BRL 6460.00.
 
-- **Ibanez RG550 Genesis Collection**: BRL 7500.00. Stock: 8; status: active.
+- **Ibanez RG550 Genesis Collection**: BRL 7500.00. In stock: 8.
   No active promotion is recorded. With the separate 5% PIX payment discount: BRL 7125.00.
 
-- **Fender Stratocaster American Pro II**: BRL 12500.00. Stock: 5; status: active.
+- **Fender Stratocaster American Pro II**: BRL 12500.00. In stock: 5.
   No active promotion is recorded. With the separate 5% PIX payment discount: BRL 11875.00.
 
-- **Gibson Les Paul Standard '50s**: BRL 18900.00. Stock: 2; status: active.
+- **Gibson Les Paul Standard '50s**: BRL 18900.00. In stock: 2.
   No active promotion is recorded. With the separate 5% PIX payment discount: BRL 17955.00.
 
 These are source-file records, not a live stock guarantee. Would you like to compare specific models?
@@ -214,12 +214,12 @@ These descriptions do not explicitly label a beginner/student model, so I won't 
   {
     "tool": "search_products",
     "arguments": {
-      "query": "electric guitar for beginner",
-      "category_id": 1
+      "category_id": 1,
+      "query": "electric guitar for beginner"
     },
     "result": {
       "source": "products.csv + promotions.csv (provided snapshot, not a live ERP)",
-      "queried_at_utc": "2026-11-01T20:12:46.290870+00:00",
+      "queried_at_utc": "2026-11-02T02:37:12.591876+00:00",
       "total_matches": 5,
       "products": [
         {
@@ -336,4 +336,4 @@ PASS
 
 ## Observations
 
-No evidence supports selecting a beginner-specific electric guitar from these five descriptions. The correct recovery is grounded options plus clarification, not an invented recommendation. Scope answers reuse a broad note and are somewhat repetitive. The final rerun uses commit 8ebb7a8; scenarios 1-4 use d11fc62. The last change only preserves available options when recommendation labels are absent.
+No evidence supports selecting a beginner-specific electric guitar from these five descriptions. The correct recovery is grounded options plus clarification, not an invented recommendation. Scope answers reuse a broad note and are somewhat repetitive. All five scenarios were rerun on runtime revision 5dc7d6b; old versions remain only as historical records.

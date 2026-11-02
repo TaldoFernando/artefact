@@ -1,5 +1,7 @@
 # Empório da Música - AI Customer Support Agent
 
+## Project Overview
+
 A Python prototype for the **Artefact AI Engineer technical challenge**. Mel is a
 friendly, informal but professional text assistant for the fictitious musical-instrument
 store in Campo Grande/MS. It combines local LLM tool calling, structured CSV lookups and
@@ -37,7 +39,9 @@ practice, restricted to the previous search's returned candidates. Recognized po
 topics use reviewed English notes tied to the exact original PDF SHA-256, with source
 sections and pages returned as evidence. Other policy prose is generated from retrieved
 pages and receives application-added citations. A mixed
-product/policy turn retains both the catalog facts and the policy explanation.
+product/policy/order turn retains each verified component. A payment follow-up can
+retain prior recommendations without repeating their full specifications. Budget
+limits are rechecked if prices change between a search and its recommendation.
 
 If the model tries to answer a non-greeting without any lookup, the application performs
 fallback policy retrieval using recent user context and requests another generation.
@@ -72,12 +76,14 @@ initial model download of about 5.2 GB and enough memory for inference and the c
 context. There is no inference API fee, but local compute, storage and electricity have
 costs. The source data are already included under `data/`; no import or migration is needed.
 
-**Repository publication is pending.** After publication, replace the explicitly marked
-URL below with the actual public repository URL. A public clone has not yet been tested.
+The public repository is [TaldoFernando/artefact](https://github.com/TaldoFernando/artefact).
+An anonymous clone of public revision `0421ec4` was installed and its 46 tests passed
+on macOS. This final review adds local corrections and 55 passing tests; these new
+commits need the candidate's explicit push authorization before submission.
 With an existing checkout, start at the virtual-environment step from its root.
 
 ```sh
-git clone <PUBLIC_REPOSITORY_URL> emporio-assistant
+git clone https://github.com/TaldoFernando/artefact.git emporio-assistant
 cd emporio-assistant
 ```
 
@@ -134,7 +140,7 @@ python -m emporio.cli
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `OLLAMA_HOST` | `http://localhost:11434` | Trusted Ollama HTTP endpoint; a host without a scheme is also accepted |
+| `OLLAMA_HOST` | `http://localhost:11434` | Trusted http(s) origin (host/port); no path, query, fragment or credentials. A host without a scheme is accepted |
 | `OLLAMA_MODEL` | `qwen3:8b` | Locally pulled, tool-capable model tag |
 
 No API key is used. The adapter disables streaming and thinking, uses temperature zero,
@@ -273,7 +279,7 @@ python -m unittest discover -s tests -v
 python scripts/validate_data.py
 ```
 
-The audited suite currently contains **46 tests**, executed successfully in a newly
+The final audited suite contains **55 tests**, executed successfully in an installed
 created environment. It covers existing/missing/unavailable products, price ranges,
 active/inactive promotions, parsed specifications, six-table validation, valid/missing/
 foreign orders, mocked policy and scope turns, combined sources, malformed tool payloads,
@@ -301,9 +307,11 @@ order values, source-commit hashes, review integrity and fixture customer-field 
 it does not replace semantic review. Exact verified commands are in the conversation index.
 
 The clean-environment package install, CLI help/start/reset/exit and offline suite were
-executed on macOS. Windows instructions are not platform-tested. Public repository clone
-verification is pending publication. The older PDF overview under `output/pdf/` belongs
-to the earlier prototype; the current audit reports and examples are authoritative.
+executed on macOS. Windows and Linux instructions are not platform-tested. An anonymous
+public clone of revision `0421ec4` passed installation and its baseline 46-test suite.
+The current local runtime has 55 passing tests. The submission PDF is regenerated from
+the final validation record and includes the verified public URL; new local commits
+still require authorized synchronization before submission.
 
 ## Known Limitations
 
@@ -328,7 +336,8 @@ to the earlier prototype; the current audit reports and examples are authoritati
   when substituting sensitive data. Supplied fixtures describe a fictitious store.
 - Dependency ranges and model tags are configurable, not a reproducibility lockfile.
   Recorded model digests and source hashes document a tested run, not every future run.
-- Public GitHub publication and final submission are pending, outside this local audit.
+- The repository is public. Uploading these final local commits requires explicit push
+  authorization. Final candidate review and recruitment submission remain pending.
 
 ## Future Improvements
 
@@ -350,6 +359,9 @@ confusing product status with promotion status, repeated return questions and di
 mixed-source responses. Corrections were tested rather than assumed correct.
 
 The candidate explicitly chose **Ollama local, without a paid API** in this conversation.
+The candidate also confirmed that all supplied operational records are fictional and
+do not represent real people. The original CSVs are preserved; no unnecessary customer
+fields appear in the model's tools or conversation examples.
 Other implementation choices were proposed and implemented with Codex assistance. No
 unrecorded claim is made about independent candidate authorship or review. Before
 submission, the candidate should review the implementation and audit findings, confirm
@@ -364,6 +376,16 @@ incremental Git history; no fabricated unaided development history is presented.
 
 The official brief requires a public GitHub repository, genuine incremental commits and
 3-5 varied conversations including a nontrivial case. The recruiting email also requests
-an English PDF uploaded through its form. Publication, adding the actual repository URL
-and submission remain separate steps. Preserve the repository after the delivery
+an English PDF uploaded through its form. The repository and its history are already
+public at the URL above. This review does not push commits, upload a form or send email.
+Review the final local version, authorize its push, then complete submission. Preserve the repository after the delivery
 timestamp; do not alter it after submission.
+
+The [final review report](reports/05_final_review.md) and [validation record](reports/final_validation.json)
+identify the checked version, actual test outcomes and remaining candidate actions.
+To rebuild the PDF after validation:
+
+```sh
+python -m pip install -e '.[pdf]'
+python scripts/build_summary.py
+```

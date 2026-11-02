@@ -1,0 +1,8 @@
+{
+  "run": "20261102T023230Z.json",
+  "source_commit_verified": "5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b",
+  "turns_checked_for_customer_field_leaks": 20,
+  "product_records_verified": 22,
+  "owned_order_records_verified": 1,
+  "result": "PASS: record parity and provenance only; semantic review remains separate"
+}

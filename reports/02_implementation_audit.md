@@ -1,5 +1,8 @@
 # Deliverable 2 - Implementation and Validation Audit
 
+> Final-review update (candidate-local date: 2026-11-01): the public repository is https://github.com/TaldoFernando/artefact and its published revision 0421ec4 was anonymously cloned, installed and tested (46 baseline tests passed). The current local final review has 55 passing tests and new full-model validation. New local commits have NOT been pushed. See [final review](05_final_review.md) for current outcomes; earlier counts and runs below are historical evidence.
+
+
 ## Scope and evidence
 
 Audited the official Artefact brief from the supplied ZIP, all six CSV files, the
@@ -7,7 +10,7 @@ original policy PDF, all application modules, packaging, CLI, evaluation/PDF scr
 offline tests, README and previous conversation examples. The baseline was commit
 `dab31c0`. Code corrections are recorded incrementally in `2d40ba4` and `d11fc62`.
 The targeted catalog-recovery correction is recorded in `8ebb7a8`.
-No repository publication or final submission occurred during this audit.
+The repository is now verified public; this review does not push updates or perform final submission.
 
 All seven files under `data/` matched an original ZIP entry byte-for-byte by SHA-256.
 Only the PDF filename was normalized. Source counts: 65 products, 9 categories,
@@ -77,13 +80,13 @@ Statuses refer to the corrected local prototype, not production readiness.
 | Scope and malicious-user-message handling | Met for evaluated scenarios | No customer-list tool; scope/privacy notes; recovery example | No universal prompt-injection guarantee |
 | Malicious retrieved text | Partial | Prompt treats evidence as data; no arbitrary execution tools | Add an adversarial corpus for novel payloads |
 | Environment configuration without embedded secrets | Met | Process environment; `.env.example`; scan | `.env` is not auto-loaded |
-| Reproducible package install and CLI | Met locally | New venv, editable install, pip check, CLI smoke test | Public clone and Windows not executed |
+| Reproducible package install and CLI | Met locally | New venv, editable install, pip check, CLI smoke test | Public baseline clone verified; Windows/Linux not executed |
 | Session continuity and reset | Met | Four-turn memory, candidates, reset test | No multiuser server or context-token budgeting |
 | Automated tests actually executed | Met | 46 tests in new environment | No coverage percentage claimed |
 | Real integration tests separate from mocks | Met | `scripts/evaluate.py`, exact JSON and Markdown | Semantic outcomes in `examples/README.md` |
 | Full English README with AI disclosure | Met locally | README and deliverable 3 audit | Candidate must review/endorse decisions |
 | Three to five varied reviewed conversations | See QA report | Five files under `examples/` | Do not equate execution with PASS |
-| Public repository and final submission | Not met | No remote/public URL established | Publication approval and final delivery remain pending |
+| Public repository and final submission | Partial | Public URL and revision 0421ec4 verified | Final local updates require push authorization; submission pending |
 
 ## Corrections and files
 
@@ -141,11 +144,10 @@ API key nor a paid inference service was introduced.
    exchanges versus rights) cannot be resolved from the supplied files. Escalate to staff.
 4. **Medium:** first-page recommendations, count-based context limits, nontransactional CSV
    reads, mutable model tags and unlocked dependency ranges constrain reproducibility/scale.
-5. **Delivery blocker:** public GitHub URL and final submission remain pending. Windows and
-   an actual public clone were not tested. The older PDF overview is not the current audit.
+5. **Delivery step:** the public repository and baseline clone are verified. Final local commits await explicit push authorization, followed by candidate submission. Windows/Linux remain untested. The current PDF is rebuilt during final review.
 
 ## Verdict
 
 **Approved with reservations for the local technical prototype.** Full submission
-compliance is still pending public publication and candidate review. This is not a
+compliance is still pending authorized synchronization and candidate review. This is not a
 production approval. Per-scenario semantic verdicts are in `examples/README.md`.

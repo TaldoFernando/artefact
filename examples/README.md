@@ -1,90 +1,80 @@
-# Conversation Validation - Artefact Deliverable 4
+# Conversation Validation - Final Review
 
-Five actual local-model scenarios, with **19 turns in the final selected examples**.
-Prompts are English translations of the requested messages. Responses were generated
-by the real `Agent.reply` path using local Ollama/Qwen3 8B and are preserved exactly;
-no scripted model fixture or fabricated dialogue is presented here as a real run.
+The final five examples contain **20 actual application turns**, all rerun against
+runtime revision `5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b`. Their exact responses, tool
+calls and source comparison are recorded in
+[the final real-model run](../reports/runs/20261102T023230Z.json). The UTC filename is an
+execution timestamp, not an assertion about the candidate's local calendar date.
 
-The review below compares application output, executed tools and supplied CSV/PDF facts.
-It was performed by Codex in this session; candidate review remains pending. A PASS
-applies to these particular scenarios and sources, not arbitrary prompts or production.
+Prompts are English translations of the requested scenarios. This is local
+Ollama/Qwen3 8B inference through the actual Agent implementation, not canned test
+answers. Some facts and reviewed policy conditions are intentionally rendered by
+Python; the metadata and traces distinguish model selection from application prefetch.
+The source review was performed by Codex; candidate endorsement remains pending.
 
-## Final evaluation
+## Final outcomes
 
-| Scenario | Objective and source check | Result | Transcript |
+| Scenario | Verification | Result | Exact transcript |
 |---|---|---|---|
-| 1. Product search | Category-5 budget/stock search, source-based beginner follow-up, Takamine price and separate PIX policy | PASS | [Exact conversation](01_product_search.md) |
-| 2. Store information | Address, Saturday hours, payment forms and nonstacking PIX condition from manual | PASS | [Exact conversation](02_store_information.md) |
-| 3. Order tracking | Unauthenticated denial, owned order 8, missing/foreign order denial and no invented dates/codes | PASS, at trusted integration seam | [Exact conversation](03_order_tracking.md) |
-| 4. Online return | Five-day receipt vs seven-calendar-day rule, conditions, store-paid freight, refund, customized-item review and no processing claim | PASS | [Exact conversation](04_return_policy.md) |
-| 5. Scope and robustness | No graphics cards/weather fabrication/customer disclosure; return to actual electric-guitar catalog | PASS, with clarification | [Exact conversation](05_out_of_scope.md) |
+| Products and follow-ups | Acoustic category, budget, stock, prior-candidate recommendations, PIX follow-up and Takamine mixed-source question | PASS | [Conversation 1](01_product_search.md) |
+| Store and payment | Address, Saturday hours, four payment forms, installment uncertainty and nonstacking PIX | PASS | [Conversation 2](02_store_information.md) |
+| Order privacy | Unauthenticated denial, owned order 8, historical tracking/estimate, missing and foreign orders denied | PASS at trusted identity seam | [Conversation 3](03_order_tracking.md) |
+| Return rules | Five days vs seven calendar days; condition, freight/refund, customization review and no processing claim | PASS | [Conversation 4](04_return_policy.md) |
+| Scope and recovery | No graphics cards or invented forecast/customer disclosure; recovery to real guitars with honest suitability limitation | PASS with clarification | [Conversation 5](05_out_of_scope.md) |
 
-The fifth case does not invent a beginner-specific guitar recommendation: the five
-available electric-guitar descriptions do not explicitly identify beginner models.
-The final answer shows the real options, says what the source cannot establish and asks
-for the budget. The order case labels a new trusted test fixture session; it does not
-claim that providing an order number or customer ID authenticates a real user.
+The PIX follow-up retains the three recommended models and exact prices without
+repeating full specifications. The order fixture is explicitly a trusted application
+identity test, not a real login. For electric guitars, source descriptions do not
+identify beginner-specific models; the correct response offers the five actual options
+and asks for a budget instead of inventing suitability.
 
-## What failed and changed
+## Preserved history
 
-| Run | Outcome | Findings and corrections |
+| Earlier run | Observed outcome | What changed |
 |---|---|---|
-| First audit round, base `2d40ba4` | Scenario 1 PARTIAL; 2-5 FAIL against all requested criteria | Missing mixed PIX lookup, missing address alias, omitted PIX caveat, mistaken order-authentication language, trusted order not queried, overly broad customized-return language, and failed topic recovery |
-| Second full round, base `d11fc62` | Scenarios 1-4 PASS; scenario 5 FAIL on recovery | Source-bound policy summaries and required evidence corrected policy/order issues. Recovery found five guitars but an empty beginner recommendation hid them |
-| Final targeted rerun, base `8ebb7a8` | Scenario 5 PASS | Rendering now retains available instruments and asks for clarification when beginner suitability is not documented |
+| [First audit round](../reports/runs/20261101T195804Z.json), `2d40ba4` | Scenario 1 PARTIAL; scenarios 2-5 FAIL against all requested criteria | Missing mixed-source PIX evidence, address alias, authenticated order query, return conditions and topic recovery |
+| [Second round](../reports/runs/20261101T200602Z.json), `d11fc62` | Scenarios 1-4 PASS; scenario 5 FAIL | Reviewed source-bound policy notes and required evidence corrected policies/orders; an empty recommendation still hid available guitars |
+| [Targeted prior rerun](../reports/runs/20261101T201149Z.json), `8ebb7a8` | Scenario 5 PASS | Valid search results preserved when beginner labels are absent |
+| [Current full rerun](../reports/runs/20261102T023230Z.json), `5dc7d6b` | All five PASS in 20 turns | Composed catalog/order/policy sections, preserved specific products alongside recommendations, budget recheck and shorter payment follow-ups |
 
-All original messages, answers and traces are retained in the JSON records. Review
-annotations are separate fields; an integrity hash records that the response/trace
-content did not change when annotations were added. No failed answer was edited to
-make it pass. The final change addresses only empty-recommendation recovery; the other
-four reviewed examples retain their exact previously tested source version and metadata.
+Failed runs are not erased. Adding review annotations did not alter original messages,
+answers or tool traces: the content integrity hash is recorded in `source_review` and
+checked by the verification script. The current five files all use the same runtime
+source version; no old execution is presented as a new one.
 
-## Provenance and reproducibility
+## Reproduce and inspect
 
-- Model: `qwen3:8b`, digest
-  `500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41`.
-- Ollama: `0.40.13`; Python: `3.12.14`; temperature 0; thinking disabled.
-- Each file includes Git base commit and references exact runtime source SHA-256 hashes.
-- Source manual: v2.1 June 2025, exact PDF hash bound to reviewed English notes.
-- Actual records:
-  [first round](../reports/runs/20261101T195804Z.json),
-  [second round and reviewed cases 1-4](../reports/runs/20261101T200602Z.json),
-  [final case-5 rerun](../reports/runs/20261101T201149Z.json).
-- `origin: application_prefetch` identifies required lookups performed by the application,
-  rather than implying that every lookup was selected by the LLM.
+Model `qwen3:8b`, digest
+`500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41`;
+Ollama `0.40.13`; Python `3.12.14`; temperature 0; thinking disabled.
+Each file identifies runtime commit, source hashes and exact lookup evidence.
 
-From the repository root, with an installed environment and running Ollama:
+With the installed package and running Ollama:
 
 ```sh
 python scripts/evaluate.py
-# Rerun only the robustness scenario after changing it:
-python scripts/evaluate.py --scenario 05_out_of_scope
 ```
 
-A new execution overwrites corresponding Markdown with unreviewed output. To reconstruct
-these reviewed examples without making new model calls:
+A fresh run overwrites examples with new, unreviewed output. To restore the reviewed
+final examples without calling the model:
 
 ```sh
-python scripts/evaluate.py --render-run reports/runs/20261101T200602Z.json
-python scripts/evaluate.py --render-run reports/runs/20261101T201149Z.json
+python scripts/evaluate.py --render-run reports/runs/20261102T023230Z.json
+python scripts/verify_run.py reports/runs/20261102T023230Z.json
 ```
 
-The second command restores the reviewed final fifth case over its older failed version.
-To independently check recorded product/order facts, authorization, fixture-field leaks
-and source-commit provenance (these checks are not semantic grading):
+The verification command passed: source-commit hashes, 22 retrieved product records,
+one owned-order record and 20 turns checked against fixture customer fields. These
+checks establish provenance/record parity, not semantic grading. Policy wording was
+also compared with the supplied manual. The offline suite separately passed 55 tests.
 
-```sh
-python scripts/verify_run.py reports/runs/20261101T200602Z.json
-python scripts/verify_run.py reports/runs/20261101T201149Z.json
-```
+## Limitations and delivery status
 
-Both record-verification commands were executed successfully. The 46-test offline suite
-also passed in a fresh installed environment. No real customer login, live carrier query,
-refund, complaint registration, human notification or production deployment was tested.
+A PASS is limited to these scenarios, not arbitrary prompts or production. There is no
+real login, live ERP/carrier integration, refund action or operational handoff. Broad
+scope notes can be repetitive and lexical matching can miss paraphrases. The candidate
+confirmed that supplied records are fictitious and do not represent real people.
 
-## Conclusion
-
-The final five examples meet the requested variety and include nontrivial source
-combination, privacy/ownership and return-policy reasoning. They are approved for the
-local prototype with the stated scope limits. Public GitHub publication, candidate
-review and final submission remain pending; this is not production acceptance.
+The [repository is public](https://github.com/TaldoFernando/artefact); an anonymous
+clone of the prior public revision was installed and tested. These final local review
+commits await explicit push authorization. No push, form submission or email was sent.

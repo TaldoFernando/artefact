@@ -1,0 +1,148 @@
+{
+  "review_local_date": "2026-11-01",
+  "checked_at_utc": "2026-11-02T02:41:22.211937+00:00",
+  "runtime_commit": "5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b",
+  "python": "3.12.14",
+  "offline_tests": {
+    "total": 55,
+    "passed": 55,
+    "failed": 0,
+    "command": "python -m unittest discover -s tests -v",
+    "log": "reports/checks/final_offline_tests.txt"
+  },
+  "dependency_check": {
+    "status": "PASS",
+    "command": "python -m pip check"
+  },
+  "syntax_check": {
+    "status": "PASS",
+    "command": "python -m compileall -q emporio scripts tests"
+  },
+  "cli_smoke": {
+    "status": "PASS",
+    "input": [
+      "/reset",
+      "/quit"
+    ]
+  },
+  "actual_connection_refusal": "PASS",
+  "data_integrity": {
+    "status": "PASS",
+    "all_original_files_match_zip": true,
+    "sha256": {
+      "desafio_tecnico_ai_eng - customers.csv": "1cd724dc86eac6258913cc890abf23d3893c57a99c9325ebfb91dfad3c7b0f37",
+      "desafio_tecnico_ai_eng - order_items.csv": "7656eb681821d48e0c932f61d3188309b955c25446578235f2d8e69604b0f0bc",
+      "desafio_tecnico_ai_eng - promotions.csv": "cbe08c7e91b00437c0c00a7ef1486deba73de52d23e3f97f51a7dbd557d759e0",
+      "desafio_tecnico_ai_eng - orders.csv": "deb9c2480605d8d22117d569f0045fd156c5e9a58ffeebb847ff61b3b9512fd5",
+      "desafio_tecnico_ai_eng - products.csv": "78d911d96ee891abb163b6c858e895025aa530ab27d0290540f05d5098377c12",
+      "store_policies.pdf": "b7527f96896929f4ba929de117651c6717e25b7a3b92b34bc54d5ba32f6156f7",
+      "desafio_tecnico_ai_eng - categories.csv": "7a7901e16c8c6357a956031ada45a6fd6a4cc9bd7bc1edc05448cc55b01b0a9e"
+    },
+    "validation": {
+      "counts": {
+        "products": 65,
+        "categories": 9,
+        "customers": 50,
+        "orders": 20,
+        "order_items": 22,
+        "promotions": 25
+      },
+      "warnings": [
+        "Estimated delivery is not receipt date.",
+        "Historical totals are not reconstructed from current catalog prices."
+      ]
+    }
+  },
+  "privacy": {
+    "status": "PASS",
+    "provenance": "Candidate confirmed in this conversation that all supplied operational data are fictitious and do not represent reality.",
+    "original_csvs_modified": false,
+    "customer_fields_in_tools": "No names, phones or emails exposed",
+    "history_rewrite": "Not performed; no need established given candidate confirmation"
+  },
+  "credential_scan": {
+    "status": "PASS",
+    "historical_blobs_scanned": 68,
+    "matching_paths": [],
+    "patterns": [
+      "OpenAI-style secret key",
+      "AWS access key ID",
+      "private key header"
+    ],
+    "env_file_present": false,
+    "limitation": "Pattern scan, not proof against every possible secret format",
+    "working_tree_files_scanned": 47
+  },
+  "repository": {
+    "url": "https://github.com/TaldoFernando/artefact",
+    "visibility": "public (verified with GitHub connector)",
+    "remote_main": "0421ec4b953dce8667d6b512d2bb987ad2358300",
+    "anonymous_clone_test": "PASS: revision 0421ec4 installed and 46 baseline tests passed on macOS",
+    "new_review_commits_pushed": false
+  },
+  "hardware_observed": {
+    "platform": "macOS",
+    "ram_bytes": 25769803776,
+    "model_download_bytes": 5225388164,
+    "minimum_memory_claimed": false
+  },
+  "llm_evaluation": {
+    "status": "PASS",
+    "run_file": "reports/runs/20261102T023230Z.json",
+    "runtime_commit": "5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b",
+    "model": "qwen3:8b",
+    "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+    "turns": 20,
+    "scenarios": [
+      {
+        "id": "01_product_search",
+        "title": "Filter acoustic guitars by price and availability, recommend from prior candidates, and combine catalog and payment policy.",
+        "result": "PASS"
+      },
+      {
+        "id": "02_store_information",
+        "title": "Retrieve address, Saturday hours, accepted payment methods and PIX conditions across a conversation.",
+        "result": "PASS"
+      },
+      {
+        "id": "03_order_tracking",
+        "title": "Require authentication, then demonstrate owned, nonexistent and foreign orders using an explicitly trusted test identity.",
+        "result": "PASS"
+      },
+      {
+        "id": "04_return_policy",
+        "title": "Apply online regret-return rules, address customized instruments without denying rights, and acknowledge the absence of transaction tools.",
+        "result": "PASS"
+      },
+      {
+        "id": "05_out_of_scope",
+        "title": "Reject unrelated merchandise/weather and data exfiltration, then resume an electric-guitar search for a beginner.",
+        "result": "PASS"
+      }
+    ],
+    "reviewer": "Codex source comparison; candidate review pending"
+  },
+  "not_executed": [
+    "Windows/Linux platform tests",
+    "production login or refund transactions",
+    "git push",
+    "Google Forms submission",
+    "email sending"
+  ],
+  "pdf": {
+    "status": "PASS",
+    "path": "output/pdf/Fernando dAvila Filho - AI Engineer - Full-Stack Generative AI Applications.pdf",
+    "pages": 3,
+    "sha256": "a9af02a663b2380eb70d6fb965e6ee5d220988dd33fbe41c43c4619cfa0b10ea",
+    "repository_link_verified": true,
+    "visual_qa": "All three rendered pages inspected; no clipping, overlap, missing glyphs or table-spacing defects"
+  },
+  "documentation_checks": {
+    "status": "PASS",
+    "relative_links_verified": 29,
+    "conversation_files": 5,
+    "required_sections_present": true,
+    "english_documentation_source_review": true
+  },
+  "git_push_performed": false
+}

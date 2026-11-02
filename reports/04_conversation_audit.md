@@ -1,5 +1,8 @@
 # Deliverable 4 - Conversation Audit
 
+> Final-review update (candidate-local date: 2026-11-01): the public repository is https://github.com/TaldoFernando/artefact and its published revision 0421ec4 was anonymously cloned, installed and tested (46 baseline tests passed). The current local final review has 55 passing tests and new full-model validation. New local commits have NOT been pushed. See [final review](05_final_review.md) for current outcomes; earlier counts and runs below are historical evidence.
+
+
 The consolidated assessment, per-scenario results, issues, corrections, exact run
 records and reproduction commands are in [`../examples/README.md`](../examples/README.md).
 The five complete transcripts are linked there and each contains Scenario, Objective,
@@ -36,4 +39,8 @@ The source review was performed with Codex assistance; candidate endorsement rem
 five final scenarios meet their source/behavior criteria. This conclusion does not
 establish universal language coverage, production authentication, prompt-injection
 immunity or legal eligibility for an actual return. The prototype cannot execute any
-transaction. The broader project still requires public publication and final delivery.
+transaction. The repository is public; new local review commits require authorized synchronization before final delivery.
+
+## Current full-version validation
+
+All five examples were rerun on runtime 5dc7d6b in reports/runs/20261102T023230Z.json. The final set has 20 actual turns (including the new recommendation-to-PIX follow-up), all reviewed PASS against source records and the original manual. The older 19-turn mixed-version set above is retained only as development history. See examples/README.md for the current table and limitations.

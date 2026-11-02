@@ -10,8 +10,8 @@ Verify exact application responses against the supplied fixtures and PDF, not pl
 
 ## Execution details
 
-- Started UTC: 2026-11-01T20:06:02.526773+00:00
-- Code base commit: `d11fc62e26cd9914496a6975f2ac9029513d17be`. Exact source SHA-256 hashes are in the JSON run record.
+- Started UTC: 2026-11-02T02:32:30.162397+00:00
+- Code base commit: `5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b`. Exact source SHA-256 hashes are in the JSON run record.
 - Model: `qwen3:8b`; digest: `500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41`.
 - Ollama: `0.40.13`; Python: `3.12.14`.
 - Temperature 0; thinking disabled; context 16,384; output limit 1,600 tokens per model call.
