@@ -77,9 +77,11 @@ context. There is no inference API fee, but local compute, storage and electrici
 costs. The source data are already included under `data/`; no import or migration is needed.
 
 The public repository is [TaldoFernando/artefact](https://github.com/TaldoFernando/artefact).
-An anonymous clone of public revision `0421ec4` was installed and its 46 tests passed
-on macOS. This final review adds local corrections and 55 passing tests; these new
-commits need the candidate's explicit push authorization before submission.
+Remote `main` was verified at `c078671f3f80fb404a2deebff89a621627e505d2` during the
+publication check. It includes tested runtime `5dc7d6b` and the 55-test suite; the runtime,
+tests and data match the reviewed version. The earlier anonymous clone at `0421ec4`
+passed its then-current 46 tests. See the [publication check](reports/06_publication_review.md)
+for the distinction between published implementation and subsequent documentation corrections.
 With an existing checkout, start at the virtual-environment step from its root.
 
 ```sh
@@ -309,9 +311,10 @@ it does not replace semantic review. Exact verified commands are in the conversa
 The clean-environment package install, CLI help/start/reset/exit and offline suite were
 executed on macOS. Windows and Linux instructions are not platform-tested. An anonymous
 public clone of revision `0421ec4` passed installation and its baseline 46-test suite.
-The current local runtime has 55 passing tests. The submission PDF is regenerated from
-the final validation record and includes the verified public URL; new local commits
-still require authorized synchronization before submission.
+The published runtime has 55 passing tests, also rerun during the publication check.
+The submission PDF uses the preserved execution record and the later
+[publication record](reports/publication_sync.json). No new Ollama inference is claimed:
+the five examples retain their original tested runtime and exact outputs.
 
 ## Known Limitations
 
@@ -336,8 +339,9 @@ still require authorized synchronization before submission.
   when substituting sensitive data. Supplied fixtures describe a fictitious store.
 - Dependency ranges and model tags are configurable, not a reproducibility lockfile.
   Recorded model digests and source hashes document a tested run, not every future run.
-- The repository is public. Uploading these final local commits requires explicit push
-  authorization. Final candidate review and recruitment submission remain pending.
+- The tested implementation and evaluation evidence are public at `c078671`.
+  Subsequent documentation/PDF corrections are identified separately in the publication
+  review. Candidate review and recruitment submission remain candidate-controlled steps.
 
 ## Future Improvements
 
@@ -359,9 +363,12 @@ confusing product status with promotion status, repeated return questions and di
 mixed-source responses. Corrections were tested rather than assumed correct.
 
 The candidate explicitly chose **Ollama local, without a paid API** in this conversation.
-The candidate also confirmed that all supplied operational records are fictional and
-do not represent real people. The original CSVs are preserved; no unnecessary customer
-fields appear in the model's tools or conversation examples.
+The dataset was supplied as part of the technical challenge involving a fictional music
+store. Original records are preserved without modification. Customer names, email addresses
+and telephone numbers are neither authentication credentials nor exposed by the agent's
+tools. The [data provenance note](reports/data_provenance.md) documents the candidate's
+actual statement and its evidential limits; it does not assert an Artefact certification
+or a formal publication license.
 Other implementation choices were proposed and implemented with Codex assistance. No
 unrecorded claim is made about independent candidate authorship or review. Before
 submission, the candidate should review the implementation and audit findings, confirm
@@ -377,12 +384,17 @@ incremental Git history; no fabricated unaided development history is presented.
 The official brief requires a public GitHub repository, genuine incremental commits and
 3-5 varied conversations including a nontrivial case. The recruiting email also requests
 an English PDF uploaded through its form. The repository and its history are already
-public at the URL above. This review does not push commits, upload a form or send email.
-Review the final local version, authorize its push, then complete submission. Preserve the repository after the delivery
-timestamp; do not alter it after submission.
+public at the URL above, including the tested runtime and evaluation evidence in
+`c078671`. The [publication review](reports/06_publication_review.md) distinguishes this
+published version from the later documentation/PDF corrections prepared locally.
+This correction session does not push commits, upload a form or send email. Review the
+corrected artifacts, synchronize these documentation corrections with explicit authorization,
+and complete submission. Preserve the repository after delivery; do not alter it after submission.
 
 The [final review report](reports/05_final_review.md) and [validation record](reports/final_validation.json)
-identify the checked version, actual test outcomes and remaining candidate actions.
+preserve the historical checked version and actual test outcomes. The later
+[publication record](reports/publication_sync.json) supersedes their repository/PDF status
+without rewriting prior execution results.
 To rebuild the PDF after validation:
 
 ```sh

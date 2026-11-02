@@ -72,9 +72,16 @@ also compared with the supplied manual. The offline suite separately passed 55 t
 
 A PASS is limited to these scenarios, not arbitrary prompts or production. There is no
 real login, live ERP/carrier integration, refund action or operational handoff. Broad
-scope notes can be repetitive and lexical matching can miss paraphrases. The candidate
-confirmed that supplied records are fictitious and do not represent real people.
+scope notes can be repetitive and lexical matching can miss paraphrases. The dataset
+was supplied for a fictional music-store challenge; original records are unchanged.
+See the [data provenance note](../reports/data_provenance.md) for the candidate's exact
+statement and the limits of that evidence.
 
-The [repository is public](https://github.com/TaldoFernando/artefact); an anonymous
-clone of the prior public revision was installed and tested. These final local review
-commits await explicit push authorization. No push, form submission or email was sent.
+The [repository is public](https://github.com/TaldoFernando/artefact). Remote `main`
+was verified at `c078671`, which contains tested runtime `5dc7d6b`, these five examples
+and their original raw run. The 55 offline tests passed again during the publication
+check; runtime and data remain unchanged. No new model inference was needed.
+Earlier audit statements that these implementation commits awaited publication are
+historical. See the [publication review](../reports/06_publication_review.md) for
+later documentation/PDF corrections prepared locally; no push, form submission or
+email was performed in this correction session.

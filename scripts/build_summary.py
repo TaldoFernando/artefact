@@ -1,4 +1,4 @@
-"""Build the submission overview from the final, executed validation record."""
+"""Build the overview from preserved execution evidence and a publication snapshot."""
 import argparse
 import json
 import hashlib
@@ -17,9 +17,17 @@ DEFAULT_OUTPUT = ROOT / 'output/pdf/Fernando dAvila Filho - AI Engineer - Full-S
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--validation', type=Path, default=ROOT / 'reports/final_validation.json')
+    parser.add_argument('--publication', type=Path, default=ROOT / 'reports/publication_sync.json')
     parser.add_argument('--output', type=Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args()
     record = json.loads(args.validation.read_text())
+    publication = json.loads(args.publication.read_text())
+    if hashlib.sha256(args.validation.read_bytes()).hexdigest() != publication['historical_validation']['sha256']:
+        raise SystemExit('Historical validation differs from the publication snapshot.')
+    if (publication['runtime_commit'] != record['runtime_commit'] or
+            not publication['repository']['runtime_and_tests_match_published']):
+        raise SystemExit('Publication snapshot does not establish runtime/test correspondence.')
+    published = escape(publication['repository']['remote_main'][:12])
     tests = record['offline_tests']
     if tests['failed'] or tests['passed'] != tests['total']:
         raise SystemExit('The validation record does not establish a passing offline suite.')
@@ -52,7 +60,7 @@ def main():
     p('Empório da Música<br/>AI Customer Support Agent', 'TitleCustom')
     p("<b>Fernando d'Ávila Filho</b><br/>AI Engineer - Full-Stack Generative AI Applications")
     p(f'<b>Public repository:</b> <link href="{repo}" color="#087D8A">{repo}</link>')
-    p('Prepared for candidate review. The repository is public; the final local review commits require explicit push authorization before recruitment submission.')
+    p(f'The tested implementation, 55-test suite and conversation evidence are public in revision <b>{published}</b>. This corrected overview reflects the later publication check; its documentation/PDF updates were prepared locally.')
     heading('Problem and solution')
     p('Mel helps the fictitious Campo Grande music store answer recurring questions about instruments, prices, availability, order status and store rules. The prototype is a Python command-line conversation using local Ollama/Qwen3 8B, six read-only tools and evidence from supplied CSVs and the original policy PDF.')
     heading('Architecture and implemented capabilities')
@@ -60,7 +68,7 @@ def main():
         ['Component', 'Role'],
         ['CLI and context', 'One local session; four complete turns; reset clears history and recommendation context.'],
         ['Ollama / Qwen3 8B', 'Interprets messages and calls allowlisted tools; no paid inference API or API key.'],
-        ['Structured tools', 'Product search/details, active offers, source-based beginner recommendations and authorized order/item lookup.'],
+        ['Six read-only tools', 'search_products, get_product_details, get_active_promotions, recommend_products, order_status, search_policies.'],
         ['Policy retrieval', 'Lexical PDF pages plus reviewed English notes enabled only for the exact source PDF hash.'],
         ['Answer composition', 'Exact prices, stock and order facts; separate policy guidance; mixed questions preserve all verified components.'],
         ['Controls', 'Validated arguments, ownership checks, provider-error handling and bounded tool rounds.'],
@@ -75,15 +83,15 @@ def main():
         p(escape(command), 'CodeCustom')
     p('Configuration: OLLAMA_HOST=http://localhost:11434 and OLLAMA_MODEL=qwen3:8b. The app reads process environment and does not automatically load .env. Chat requires a running Ollama; /reset and /quit are CLI commands. Full setup and troubleshooting are in the README.')
     heading('Evidence, business rules and privacy')
-    p('All six original CSVs and the policy PDF are preserved byte-for-byte. The candidate confirmed the operational records are fictional and do not represent real people. Customer names, emails and phones are not exposed by tools. No credentials were found by the documented repository/history scan.')
+    p('The dataset was supplied for a technical challenge involving a fictional music store. All six original CSVs and the policy PDF are preserved byte-for-byte. Customer names, emails and phones are neither authentication credentials nor exposed by tools. The repository provenance note records the candidate statement and its limits; no independent certification or formal publication license is claimed.')
     p('Only active, stocked instruments are presented as available. Promotional prices use explicit active flags; a PIX discount never stacks with an active campaign. Follow-up recommendations remain within the original budget when source prices change. The source files are historical snapshots, not live inventory or carrier data.')
     p('Order details require identity supplied by trusted application code and an ownership check. The CLI has no login. The order example explicitly uses a test identity fixture, not real authentication. Estimated delivery is never treated as actual receipt.')
     p('The manual conflicts on contacts, installment minimums and exchange/warranty handling, and leaves local freight at exactly BRL 500 undefined. The assistant preserves uncertainty and requests team confirmation. Customized online returns require review; the prototype cannot approve, process or register a return.')
     heading('AI assistance')
-    p('OpenAI Codex assisted with source inspection, implementation, regression tests, actual model evaluation and English documentation. The candidate chose local Ollama and confirmed fictitious data. Other choices were implemented with Codex assistance; no unaided authorship or unperformed human validation is claimed. Candidate review remains essential.')
+    p('OpenAI Codex assisted with source inspection, implementation, regression tests, actual model evaluation and English documentation. The candidate chose local Ollama without a paid API. Other choices were implemented with Codex assistance; no unaided authorship or unperformed human validation is claimed. Candidate review remains essential.')
     story.append(PageBreak())
     heading('Executed validation')
-    p(f"<b>Offline suite: {tests['total']} executed, {tests['passed']} passed, {tests['failed']} failed.</b> Installation, dependency consistency, source validation and CLI smoke checks were executed on macOS. An anonymous clone of the published baseline passed its 46 tests; this local review has the updated suite.")
+    p(f"<b>Offline suite: {tests['total']} executed, {tests['passed']} passed, {tests['failed']} failed.</b> These tests passed again during the publication check on macOS. Published revision {published} contains the same runtime, tests and data. Installation and CLI smoke evidence remain in the historical validation record.")
     p('Unit tests include unavailable products, active/inactive offers, PIX, budgets, owned/missing/foreign orders, mixed sources, follow-ups, malformed model output, connectivity failures, empty evidence and changed-PDF handling. Scripted model fixtures test the protocol; real model conversations are evaluated separately.')
     outcomes = record['llm_evaluation']['scenarios']
     table([['Actual local-model scenario', 'Reviewed result']] + [[s['title'], s['result']] for s in outcomes], [365, 133])
@@ -94,7 +102,7 @@ def main():
     p('There is no production authentication, WhatsApp integration, live ERP/carrier connection, refund processor or operational handoff. Lexical topic matching may miss paraphrases; unknown policy prose can be imprecise. Reviewed notes are disabled when the PDF changes and must then be re-reviewed. Four turns do not guarantee token-budget fit. Dependency ranges and model tags are not a full reproducibility lock.')
     p('Beginner recommendations use explicit source descriptions. If no electric-guitar description establishes beginner suitability, Mel shows the real options and asks for a budget instead of inventing advice. Read-only tools and prompts reduce risk but do not prove universal prompt-injection resistance.')
     heading('Before submission')
-    p('Review the local changes, authorize their push, confirm the public repository contains the reviewed revision, then upload this PDF and the repository link using the recruiting instructions. This review did not push, submit a form or send email. Freeze the repository after delivery.')
+    p('Review the corrected artifacts and synchronize the documentation/PDF corrections before delivery. The tested implementation is already public. The correction session did not push, submit a form or send email. Candidate approval and recruitment submission remain separate steps. Freeze the repository after delivery.')
     def footer(canvas, doc):
         canvas.setStrokeColor(colors.HexColor('#D6E0E2'))
         canvas.line(48, 42, A4[0] - 48, 42)

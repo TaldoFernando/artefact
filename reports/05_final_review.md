@@ -1,5 +1,17 @@
 # Final Review and Submission Preparation
 
+> Publication correction (2026-11-02): remote `main` is now verified at
+> `c078671f3f80fb404a2deebff89a621627e505d2`, including runtime `5dc7d6b`, its
+> 55-test suite and five reviewed conversations (20 turns). The tested implementation
+> is public. The audit below records an earlier session: its statements about no push,
+> pending synchronization and older public revisions describe that historical state,
+> not the current remote. Later documentation/PDF corrections are local only.
+> See [current publication review](06_publication_review.md) and
+> [data provenance](data_provenance.md). The original
+> [execution record](final_validation.json) remains byte-for-byte unchanged.
+
+## Historical audit (superseded publication status)
+
 Candidate-local context date: 2026-11-01. Raw model runs retain their precise UTC
 timestamps. Application runtime reviewed: `5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b`.
 Public repository: [TaldoFernando/artefact](https://github.com/TaldoFernando/artefact).

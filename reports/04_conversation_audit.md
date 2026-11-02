@@ -1,6 +1,18 @@
 # Deliverable 4 - Conversation Audit
 
-> Final-review update (candidate-local date: 2026-11-01): the public repository is https://github.com/TaldoFernando/artefact and its published revision 0421ec4 was anonymously cloned, installed and tested (46 baseline tests passed). The current local final review has 55 passing tests and new full-model validation. New local commits have NOT been pushed. See [final review](05_final_review.md) for current outcomes; earlier counts and runs below are historical evidence.
+> Publication correction (2026-11-02): remote `main` is now verified at
+> `c078671f3f80fb404a2deebff89a621627e505d2`, including runtime `5dc7d6b`, its
+> 55-test suite and five reviewed conversations (20 turns). The tested implementation
+> is public. The audit below records an earlier session: its statements about no push,
+> pending synchronization and older public revisions describe that historical state,
+> not the current remote. Later documentation/PDF corrections are local only.
+> See [current publication review](06_publication_review.md) and
+> [data provenance](data_provenance.md). The original
+> [execution record](final_validation.json) remains byte-for-byte unchanged.
+
+## Historical audit (superseded publication status)
+
+> Historical final-review update (candidate-local date: 2026-11-01): the public repository is https://github.com/TaldoFernando/artefact and its published revision 0421ec4 was anonymously cloned, installed and tested (46 baseline tests passed). The current local final review has 55 passing tests and new full-model validation. New local commits have NOT been pushed. See [final review](05_final_review.md) for current outcomes; earlier counts and runs below are historical evidence.
 
 
 The consolidated assessment, per-scenario results, issues, corrections, exact run

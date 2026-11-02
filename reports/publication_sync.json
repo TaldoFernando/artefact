@@ -1,0 +1,183 @@
+{
+  "observed_at_utc": "2026-11-02T03:09:06.936459+00:00",
+  "review_context_date": "2026-11-02",
+  "scope": "Publication/documentation/PDF correction only; no agent, test, dependency or fixture changes.",
+  "runtime_commit": "5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b",
+  "historical_validation": {
+    "path": "reports/final_validation.json",
+    "sha256": "954359cb9876830a6f18c34fc9256651a3a057088880778994eea55bf1437dd1",
+    "unchanged_from_published_commit": "c078671f3f80fb404a2deebff89a621627e505d2",
+    "scope": "Immutable prior execution record; prior remote status and PDF hash are historical."
+  },
+  "repository": {
+    "url": "https://github.com/TaldoFernando/artefact",
+    "remote_main": "c078671f3f80fb404a2deebff89a621627e505d2",
+    "starting_local_head": "c078671f3f80fb404a2deebff89a621627e505d2",
+    "runtime_is_ancestor_of_remote": true,
+    "runtime_and_tests_match_published": true,
+    "new_correction_scope": "Local documentation/PDF corrections; not pushed by this session. Final correction commit is reported after committing.",
+    "history_rewritten": false,
+    "prior_history_commits_preserved": [
+      "c078671f3f80fb404a2deebff89a621627e505d2",
+      "5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b",
+      "0421ec4b953dce8667d6b512d2bb987ad2358300",
+      "b6e0d5fe03d674e151ea95a5d5c187b4eb833a0b",
+      "8ebb7a8e23c1b972207bd957009048485a0ae8ec",
+      "d11fc62e26cd9914496a6975f2ac9029513d17be",
+      "2d40ba49abdc2fb0b2f127c1554ce7d310c9c082",
+      "dab31c084d0a0784bf9a5e0e1d872aec5fa5d2df",
+      "2c7947b7998b9d3ccd31ca4ac3653ab095b5f07c",
+      "e30f364c757c8220bab5a71c55a2b9a4bb6b2aa8",
+      "eff9ae8cf401d04e64f174c3b73498af5d908ed0"
+    ]
+  },
+  "checks": {
+    "dependencies": {
+      "command": "python -m pip check",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "reports/checks/sync_dependencies.txt"
+    },
+    "offline_tests": {
+      "command": "python -m unittest discover -s tests -v",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "reports/checks/sync_offline_tests.txt",
+      "total": 55,
+      "passed": 55,
+      "failed": 0
+    },
+    "data": {
+      "command": "python scripts/validate_data.py",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "reports/checks/sync_data.txt"
+    },
+    "syntax": {
+      "command": "python -m compileall -q emporio scripts tests",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "reports/checks/sync_syntax.txt"
+    },
+    "run_verification": {
+      "command": "python scripts/verify_run.py reports/runs/20261102T023230Z.json",
+      "exit_code": 0,
+      "status": "PASS",
+      "log": "reports/checks/sync_run_verification.txt"
+    }
+  },
+  "data_integrity": {
+    "all_seven_files_match_original_zip": true,
+    "sha256": {
+      "desafio_tecnico_ai_eng - customers.csv": "1cd724dc86eac6258913cc890abf23d3893c57a99c9325ebfb91dfad3c7b0f37",
+      "desafio_tecnico_ai_eng - order_items.csv": "7656eb681821d48e0c932f61d3188309b955c25446578235f2d8e69604b0f0bc",
+      "desafio_tecnico_ai_eng - promotions.csv": "cbe08c7e91b00437c0c00a7ef1486deba73de52d23e3f97f51a7dbd557d759e0",
+      "desafio_tecnico_ai_eng - orders.csv": "deb9c2480605d8d22117d569f0045fd156c5e9a58ffeebb847ff61b3b9512fd5",
+      "desafio_tecnico_ai_eng - products.csv": "78d911d96ee891abb163b6c858e895025aa530ab27d0290540f05d5098377c12",
+      "store_policies.pdf": "b7527f96896929f4ba929de117651c6717e25b7a3b92b34bc54d5ba32f6156f7",
+      "desafio_tecnico_ai_eng - categories.csv": "7a7901e16c8c6357a956031ada45a6fd6a4cc9bd7bc1edc05448cc55b01b0a9e"
+    },
+    "original_csvs_modified": false
+  },
+  "privacy": {
+    "source": "reports/data_provenance.md",
+    "evidence": "Explicit human user assertion in task conversation, transcribed with original wording and translation.",
+    "independent_Artefact_certification_or_formal_publication_license_claimed": false,
+    "real_person_provenance_established": false
+  },
+  "preserved_examples": {
+    "files_unchanged": [
+      "examples/01_product_search.md",
+      "examples/02_store_information.md",
+      "examples/03_order_tracking.md",
+      "examples/04_return_policy.md",
+      "examples/05_out_of_scope.md",
+      "reports/runs/20261101T195804Z.json",
+      "reports/runs/20261101T200602Z.json",
+      "reports/runs/20261101T201149Z.json",
+      "reports/runs/20261102T023230Z.json"
+    ],
+    "live_inference_repeated": false,
+    "runtime_commit": "5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b",
+    "turns": 20,
+    "reviewed_scenarios": 5,
+    "historical_source_review_results": [
+      "PASS",
+      "PASS",
+      "PASS",
+      "PASS",
+      "PASS"
+    ]
+  },
+  "links": {
+    "readme_local_targets": [
+      "examples/01_product_search.md",
+      "examples/02_store_information.md",
+      "examples/03_order_tracking.md",
+      "examples/04_return_policy.md",
+      "examples/05_out_of_scope.md",
+      "examples/README.md",
+      "reports/02_implementation_audit.md",
+      "reports/03_readme_audit.md",
+      "reports/05_final_review.md",
+      "reports/06_publication_review.md",
+      "reports/data_provenance.md",
+      "reports/final_validation.json",
+      "reports/publication_sync.json"
+    ],
+    "external": {
+      "https://docs.ollama.com/api/chat": {
+        "http_status": 200,
+        "final_url": "https://docs.ollama.com/api/chat"
+      },
+      "https://docs.ollama.com/capabilities/tool-calling": {
+        "http_status": 200,
+        "final_url": "https://docs.ollama.com/capabilities/tool-calling"
+      },
+      "https://docs.ollama.com/quickstart": {
+        "http_status": 200,
+        "final_url": "https://docs.ollama.com/quickstart"
+      },
+      "https://github.com/TaldoFernando/artefact": {
+        "http_status": 200,
+        "final_url": "https://github.com/TaldoFernando/artefact"
+      },
+      "https://ollama.com/library/qwen3:8b": {
+        "http_status": 200,
+        "final_url": "https://ollama.com/library/qwen3:8b"
+      }
+    }
+  },
+  "credential_scan": {
+    "status": "PASS",
+    "history_blobs_scanned": 89,
+    "workspace_files_scanned": 55,
+    "patterns": [
+      "OpenAI-style key",
+      "AWS access key ID",
+      "Private key header"
+    ],
+    "matches": [],
+    "limitation": "Bounded pattern scan, not proof against every secret format."
+  },
+  "git_push_performed": false,
+  "form_submitted": false,
+  "email_sent": false,
+  "pdf": {
+    "status": "PASS",
+    "path": "output/pdf/Fernando dAvila Filho - AI Engineer - Full-Stack Generative AI Applications.pdf",
+    "sha256": "b3be2e7b3a8660639a7c20efede33010692fc2d3bf38161c37d7ca9f5631af73",
+    "pages": 3,
+    "repository_hyperlink_verified": true,
+    "candidate_role_six_tools_test_results_verified": true,
+    "language_review": "English prose; original proper names preserved.",
+    "visual_qa": "All three final rendered pages inspected: no clipping, overlap, missing glyphs or illegible text.",
+    "historical_pdf_hash_scope": "The old PDF hash in final_validation.json belongs to the earlier published PDF."
+  },
+  "documentation_checks": {
+    "five_transcripts_accessible": true,
+    "nine_required_sections_each": true,
+    "historical_audits_labeled": true,
+    "current_data_attribution_source": "reports/data_provenance.md"
+  }
+}

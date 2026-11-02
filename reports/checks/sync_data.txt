@@ -1,0 +1,14 @@
+{
+  "counts": {
+    "products": 65,
+    "categories": 9,
+    "customers": 50,
+    "orders": 20,
+    "order_items": 22,
+    "promotions": 25
+  },
+  "warnings": [
+    "Estimated delivery is not receipt date.",
+    "Historical totals are not reconstructed from current catalog prices."
+  ]
+}
