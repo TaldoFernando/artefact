@@ -1,41 +1,21 @@
 # Final Review and Submission Preparation
 
-> Publication correction (2026-11-02): remote `main` is now verified at
-> `c078671f3f80fb404a2deebff89a621627e505d2`, including runtime `5dc7d6b`, its
-> 55-test suite and five reviewed conversations (20 turns). The tested implementation
-> is public. The audit below records an earlier session: its statements about no push,
-> pending synchronization and older public revisions describe that historical state,
-> not the current remote. Later documentation/PDF corrections are local only.
-> See [current publication review](06_publication_review.md) and
-> [data provenance](data_provenance.md). The original
-> [execution record](final_validation.json) remains byte-for-byte unchanged.
-
-## Historical audit (superseded publication status)
+This report records the earlier technical audit. Test counts and publication
+observations below refer to that session; later checks are in the
+[publication review](06_publication_review.md). Raw runs and execution records are unchanged.
 
 Candidate-local context date: 2026-11-01. Raw model runs retain their precise UTC
 timestamps. Application runtime reviewed: `5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b`.
 Public repository: [TaldoFernando/artefact](https://github.com/TaldoFernando/artefact).
 
-## A. Executive summary
+## A. Results
 
-**Ready for candidate review, with authorized synchronization required before submission.**
-The Python CLI, README, five exact real-model conversations, audit records and English
-submission PDF are aligned. The final local suite executed 55 tests: 55 passed, zero
-failed. All five final real-model scenarios passed their source/behavior criteria in
-20 turns on one runtime revision. No production readiness or universal correctness
-claim is made.
+The final audit executed **55 offline tests: 55 passed, zero failed**, then reviewed
+five real-model scenarios across 20 turns on runtime `5dc7d6b`. All five met their
+recorded source/behavior criteria. These are prototype results, not production claims.
 
-The public repository and its incremental history were verified. An anonymous clone
-of published revision `0421ec4` installed successfully and passed its original 46-test
-suite on macOS. This review adds local fixes and evidence; **no git push, form submission
-or email sending was performed**. The reviewed local revision must be synchronized
-with the public repository only after the candidate's explicit authorization.
-
-Source-based rendering is preserved. Corrections prevent one answer component from
-hiding another, retain useful recommendations during payment follow-ups, avoid repeated
-specification blocks, recheck original budget constraints after price updates, preserve
-active-campaign semantics and reject ambiguous model-host URLs. The original operational
-files were not modified.
+At that session, an anonymous clone of `0421ec4` passed its 46-test suite. No push,
+form submission or email was performed. Later publication is recorded in report 06.
 
 ## B. Changes made
 
@@ -52,12 +32,7 @@ files were not modified.
 | `tests/test_final_review.py` | Missing final composition/security cases | Nine new offline regressions, including injection/identity/code-execution attempts | Final suite 55/55 |
 | `scripts/evaluate.py` | Older examples lacked the new payment-follow-up behavior | Added one real follow-up and reran all five scenarios | 20 exact application turns on one runtime commit |
 | `scripts/verify_run.py` | Promotion verification coupled activity to nonzero percentage | Independently verify explicit campaign flags | Current run provenance and source parity passed |
-| `README.md` | Stale public-repository placeholder, old counts/PDF notes | Actual GitHub URL, Project Overview, current commands/results, provenance and push boundary | Public clone, local setup, relative links and source review |
-| `reports/02_implementation_audit.md`, `03_readme_audit.md`, `04_conversation_audit.md` | Historical publication/test status could be mistaken for current state | Current-status notes and corrected publication facts; preserve failure history | Cross-checked against this report and exact raw records |
-| `examples/` | Mixed historical runtime versions | Replace delivery examples with a full current-version rerun, retaining old JSON records | Five PASS files, required sections and unchanged response/trace hashes |
-| `scripts/build_summary.py` | PDF claimed 3 tools, 21 tests and missing repository | Build current overview from executed validation JSON, with six tools, 55 tests and public URL | Generated PDF text/link checks and visual inspection of three pages |
-| `.gitattributes` | Text/EOL conversion could treat ASCII-encoded PDFs or original CSVs as editable text | Mark PDFs binary and preserve CSV bytes | Git attributes verified; diff checks exclude valid PDF formatting |
-| `reports/final_validation.json`, `reports/checks/` | Final assertions needed durable evidence | Actual command logs, source hashes, privacy provenance and scoped credential scan | Logs and JSON generated from executed checks |
+| Documentation, examples, PDF builder and Git attributes | Stale counts, mixed example versions, missing durable evidence and possible data/PDF text conversion | Updated artifacts and actual logs; marked PDFs binary and preserved CSV bytes | Five same-runtime examples, three-page PDF inspection, link/hash/attribute checks and `final_validation.json` |
 
 ## C. Executed tests and checks
 
@@ -117,17 +92,10 @@ Codex assistance; candidate review/endorsement is still pending.
 
 ### Source data, privacy and security
 
-The brief identifies a fictitious store, but that statement alone was not treated as
-proof of customer-record publication permission. The candidate explicitly confirmed in
-this conversation that all supplied operational records are fictitious and do not
-represent reality. This confirmation is attributed to the candidate, not invented as
-an independent certification from Artefact. Original CSVs are preserved unchanged.
-
-All seven files in `data/` match an original ZIP member byte-for-byte. Customer names,
-phones and emails are used neither as authentication nor as model-visible tool output.
-The customer CSV first appears in commit `eff9ae8`; no customer-history rewrite was
-needed on the confirmed fictitious-data premise. No original customer field values are
-reproduced in this report.
+All seven data files matched original ZIP bytes. Customer names, phones and emails
+were neither authentication credentials nor tool output. The customer CSV first
+appears in `eff9ae8`; no history rewrite was performed. The candidate statement about
+fictional data and its limits are documented in [data provenance](data_provenance.md).
 
 A scoped scan inspected 68 historical Git blobs and the current relevant files for
 OpenAI-style secret keys, AWS access-key IDs and private-key headers. No match was found;
@@ -145,58 +113,16 @@ inspected for legibility, clipping, overlap, table spacing and page numbering. T
 repository hyperlink was checked in the PDF annotations. The builder reads the final
 validation record instead of accepting an unchecked claim that evaluation passed.
 
-## D. Deliverable conformity and final checklist
+## D. Limits and delivery
 
-PASS is a check supported by execution or source review. PARTIAL identifies a deliberate
-prototype limit or a candidate-controlled delivery gate; NOT VERIFIED is not a pass.
+The documented tests passed for the implemented features. Production authentication,
+transactions, WhatsApp, ERP/carrier access, multiuser serving and operational handoff
+are not implemented. Lexical matching can miss paraphrases, generated policy prose may
+be inaccurate and broad scope notes can repeat. Notes require review when the PDF
+changes. Four-turn memory does not bound token size; dependency ranges/model tags
+are not locked. Manual contradictions require staff confirmation.
 
-| Requirement | Status | Evidence / boundary |
-|---|---|---|
-| Python syntax and declared dependencies | PASS | compileall, editable installation and pip check |
-| CLI initialization/reset/exit | PASS | Executed smoke test |
-| Offline regression suite | PASS | 55 passed, zero failed |
-| Original data integrity and six-table loading | PASS | ZIP hashes, source validator and relationship tests |
-| Tool price/promotion/stock behavior | PASS | Offline regressions and actual record verification |
-| Original PDF retrieval and reviewed policy references | PASS | Exact PDF hash, pages, conditions and contradictions reviewed |
-| Product/order/policy composition and follow-ups | PASS | Nine regressions plus current real-model example |
-| Order authorization and non-disclosure | PASS for seam | Owned, missing, foreign and unauthenticated checks |
-| Production authentication/transactions | NOT VERIFIED | Not implemented or required for this prototype; explicitly documented |
-| Scope and evaluated prompt-injection attempt | PASS for tested cases | Minimal allowlist, identity protection and real refusal/recovery |
-| Universal prompt-injection resistance | NOT VERIFIED | No such guarantee or production security certification |
-| README/code agreement and English documentation | PASS | Current commands, real URL, AI disclosure and limitations |
-| Five current, exact conversations | PASS | Same runtime version, 20 turns, source-reviewed results |
-| Public repository and incremental history | PASS | Connector visibility, anonymous clone and published 0421ec4 history |
-| Final local changes available on GitHub | PARTIAL | Awaiting explicit candidate push authorization; no push performed |
-| Submission PDF | PASS | Updated English three-page document, real URL and verified outcomes |
-| Credentials / unintended real-person records | PASS within audit scope | Scoped history/tree scan and candidate fictitious-data confirmation |
-| Relative links and required transcript sections | PASS | Final automated path/section check |
-| Windows/Linux platform behavior | NOT VERIFIED | macOS execution only |
-| Final recruitment submission | NOT VERIFIED | Intentionally not performed |
-
-## E. Remaining issues
-
-**Before external delivery:** the candidate must review the code, AI disclosure and
-artifacts, authorize synchronization of the new local commits, and verify that GitHub
-serves the reviewed revision before uploading the PDF/link. This is a delivery gate,
-not an uncorrected failure in the local prototype.
-
-**Prototype limitations, optional beyond the challenge:** no production authentication,
-live carrier/ERP, WhatsApp deployment, refund workflow, multiuser server or operational
-handoff. Lexical retrieval and source-topic matching do not understand every paraphrase;
-unknown generated policy prose can be inaccurate. Broad scope notes can be repetitive.
-Reviewed summaries must be revisited when the PDF changes. Memory is bounded by turn
-count, not token count; dependencies/model tags are not fully pinned. Store-manual
-contradictions are preserved for human confirmation instead of resolved by invention.
-
-No known critical failure remains in the verified mandatory local behaviors. The
-review does not assign a percentage score or turn prototype tests into a production
-approval.
-
-## F. Candidate-only next steps
-
-1. Review the final local diff, README, real transcripts and updated PDF; confirm the AI
-   assistance disclosure accurately represents the candidate's review and decisions.
-2. Explicitly authorize the push, then confirm the public GitHub revision and PDF match
-   the approved local version.
-3. Complete the recruiter-directed Google Form/email delivery personally or give a
-   separate explicit instruction. Freeze the repository after submission.
+Windows/Linux and universal prompt-injection resistance were not verified. The
+[README](../README.md#known-limitations) consolidates the operational limits.
+The candidate must review the code, AI disclosure, transcripts and PDF, publish approved
+changes, and complete recruitment delivery. Keep the repository unchanged afterward.

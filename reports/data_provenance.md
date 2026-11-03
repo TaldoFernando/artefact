@@ -1,34 +1,25 @@
-# Data provenance and scope of confirmation
+# Data provenance
 
-The dataset was supplied as part of the Artefact technical challenge involving the
-fictional music store Empório da Música. All six original CSVs and the supplied
-policy PDF are preserved byte-for-byte. Customer names, email addresses and telephone
-numbers are not authentication credentials and are not exposed by agent tools.
+The dataset was supplied for the Artefact challenge involving the fictional music
+store Empório da Música. All six CSVs and the policy PDF retain their original bytes.
+Customer names, emails and phones are neither authentication credentials nor agent
+tool output.
 
-## Evidence available in the task conversation
+## Candidate statement
 
-The assistant asked whether the candidate had confirmation that the customer records
-were synthetic and authorized for publication, explaining that the fictional-store
-brief alone did not establish this. The human user replied verbatim:
+Asked whether the customer records were synthetic and authorized for publication,
+the human user replied in the task conversation:
 
 > nao ha problemas, sao todos dados ficticios que nao reprensentam a realidade
 
 English translation: "There are no problems; they are all fictitious data that do not
 represent reality."
 
-This is an explicit candidate assertion in the conversation that authorized this
-work, transcribed here so historical references to it can be understood. It is not
-an independent verification of each record, a statement from Artefact, or documentary
-proof of a formal publication license. No such certification or license is claimed.
-The conversation is the source; no nonexistent email or external confirmation is cited.
+This documents the candidate's assertion, not independent verification of every record,
+an Artefact statement or a formal publication license. The historical
+`privacy.provenance` field in [final_validation.json](final_validation.json) refers to
+this reply; that execution record is unchanged.
 
-The historical `privacy.provenance` statement in `final_validation.json` refers to
-this user reply. That execution record is preserved unchanged. Current summary
-wording describes the supplied fictional-store challenge rather than asserting an
-independent certification that every record is synthetic.
-
-No evidence in this review contradicts the candidate's statement; realistic-looking
-contact fields alone do not prove real-person provenance. The review does not certify
-real-world identities. If later evidence identifies real personal data, pause further
-publication and obtain dataset-owner clarification before replacing or removing it.
-No source-data edits or Git history rewrites were performed here.
+No evidence of real-person provenance was established in the review. If such evidence
+emerges, pause further publication and obtain dataset-owner clarification before
+changing the data. No source data or Git history was rewritten.

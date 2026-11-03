@@ -1,84 +1,68 @@
-# Publication and final artifact correction review
+# Publication and Artifact Checks
 
-Review context date: 2026-11-02. Precise observation times and hashes are in
-[publication_sync.json](publication_sync.json). Repository:
-[TaldoFernando/artefact](https://github.com/TaldoFernando/artefact).
+Repository: [TaldoFernando/artefact](https://github.com/TaldoFernando/artefact).
+This report separates historical observations from the later editorial review.
 
-## Outcome and publication evidence
+## Publication observations
 
-**READY FOR SUBMISSION — corrected local artifacts, subject to candidate review and
-publication of this documentation/PDF correction before uploading.** No implementation
-failure remains in the checks performed here. This verdict does not mean that a
-recruitment submission or a push was performed.
-
-Remote `main` was read directly, including with Git credentials disabled, and returned
-`c078671f3f80fb404a2deebff89a621627e505d2`. The public repository URL returned HTTP 200.
-Published history contains `5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b`, the runtime used
-for the five reviewed conversations. There is no difference in `emporio/`, `tests/`,
-`data/` or `pyproject.toml` between that runtime, `c078671` and this correction workspace.
-Thus the tested implementation, its 55-test suite and conversation evidence are
-already public. The earlier anonymous-clone result of 46 tests at `0421ec4` remains
-historical evidence; it is not the test count of the current published version.
-
-The new documentation/PDF correction is local only. The publication snapshot identifies
-its starting local HEAD and the observed remote HEAD; it cannot include its own future
-commit hash. Read the final `git log -1` and `git status` for the resulting local commit.
-No push, Google Forms submission or email was performed in this correction session.
-
-## Corrected reservations and modified files
-
-| File(s) | Reason and resulting behavior |
+| Check | Observed state |
 |---|---|
-| `README.md` | Replace stale implementation-push warnings with verified publication status; distinguish later local documentation corrections; use bounded data-provenance wording and link current evidence. |
-| `reports/02_implementation_audit.md`, `03_readme_audit.md`, `04_conversation_audit.md`, `05_final_review.md` | Add a dated correction above each historical audit. Their original no-push statements and previous results remain identifiable as historical. |
-| `examples/README.md` | Correct delivery status and link data provenance. The five actual conversations and all raw runs are unchanged. |
-| `reports/data_provenance.md` | Document the human user's exact confirmation, its English translation and evidential limits. No independent Artefact certification or formal publication license is asserted. |
-| `scripts/build_summary.py` | Read a later publication snapshot alongside the immutable execution record, reject mismatched provenance, correct stale PDF publication text and explicitly list the six tools. Agent behavior is unchanged. |
-| `output/pdf/Fernando dAvila Filho - AI Engineer - Full-Stack Generative AI Applications.pdf` | Regenerate because the previous PDF incorrectly implied that the tested implementation was unpublished. Update data wording and retain real test/architecture limitations. |
-| `reports/publication_sync.json` | New observation record: remote/version correspondence, preserved historical record hash, checks, data hashes, links, bounded credential scan and corrected PDF hash. |
-| `reports/checks/sync_*.txt` | Separate logs for checks actually repeated here; old execution logs remain untouched. |
-| `reports/06_publication_review.md` | Consolidate corrections, evidence, scope and remaining actions. |
+| Earlier anonymous clone | Revision `0421ec4` installed on macOS; its then-current 46 tests passed |
+| Publication correction, 2026-11-02 context | Remote `main` returned `c078671f3f80fb404a2deebff89a621627e505d2`, including with credentials disabled; repository URL returned HTTP 200 |
+| Editorial review, 2026-11-02 context | Remote `main` returned `78825552215a3679238def9ad5f251451ccee5d6`, including the publication/provenance corrections |
 
-`reports/final_validation.json` is preserved byte-for-byte. Its remote revision, no-push
-field and old PDF hash describe the previous execution session. Current remote and PDF
-status are in the new snapshot; prior test results were not retroactively rewritten.
+Both published revisions contain runtime `5dc7d6b6bd0ec5bbcc8050038559a24a2a29788b`,
+the 55-test suite and five reviewed conversations (20 turns). Runtime, tests, data
+and dependencies are unchanged in this editorial review. The new editorial changes
+are local; this review does not push, submit a form or send email.
 
-## Data provenance
+## Preserved snapshots
 
-The source brief describes a fictional music store. The user also explicitly stated
-that all supplied data were fictitious and did not represent reality. The exact reply
-and the limits of that assertion are in [data_provenance.md](data_provenance.md).
-This is user evidence, not a dataset-owner certification. No evidence of real-person
-provenance was established in this review; no independent identity verification is
-claimed. All seven source files still match original ZIP bytes. No CSV, source PDF or
-Git history was rewritten. Customer names, emails and phones are not tool output or
-authentication credentials.
+[final_validation.json](final_validation.json) is the original execution record.
+[publication_sync.json](publication_sync.json) records the later publication check,
+source hashes, data integrity, links, bounded credential scan and the PDF then reviewed.
+Both JSON files remain unchanged. Their remote references and PDF hashes describe
+those observations, not a moving current state. The editorial PDF hash and new checks
+are recorded separately in [the editorial log](checks/editorial_validation.txt).
 
-## Checks actually performed
+Earlier reports retain their technical outcomes and distinguish historical test counts.
+Their previous prose is also available in commit `7882555`; real transcripts, raw runs
+and command logs were not edited during the editorial pass.
 
-On Python 3.12.14 / macOS, using the existing isolated environment:
+## Publication-correction checks
 
-| Check | Result | Evidence |
+These checks ran on Python 3.12.14 / macOS before the editorial review:
+
+| Check | Recorded result | Evidence |
 |---|---|---|
-| `python -m pip check` | PASS, no broken requirements | [Dependency log](checks/sync_dependencies.txt) |
-| `python -m unittest discover -s tests -v` | 55 executed, 55 passed, zero failed | [Test log](checks/sync_offline_tests.txt) |
-| `python scripts/validate_data.py` | PASS, all six tables; existing snapshot warnings retained | [Data log](checks/sync_data.txt) |
-| `python -m compileall -q emporio scripts tests` | PASS | [Syntax log](checks/sync_syntax.txt) |
-| `python scripts/verify_run.py reports/runs/20261102T023230Z.json` | PASS for source/hash/record parity: 20 turns, 22 product records, one owned order | [Run verification](checks/sync_run_verification.txt) |
-| Source byte comparisons | Seven original ZIP members match; tested runtime/tests/data unchanged; five transcripts and all raw runs unchanged | Publication snapshot |
-| Links, credential patterns and history | Existing README local targets, external HTTP links, no matches for bounded secret patterns, historical commit ancestry retained | Publication snapshot |
-| Corrected PDF | Opens as three pages; English prose, correct candidate/role, working repository hyperlink, six exact tool names, real results, honest limitations; all rendered pages visually inspected | Corrected PDF and snapshot |
+| `python -m pip check` | No broken requirements | [Dependency log](checks/sync_dependencies.txt) |
+| `python -m unittest discover -s tests -v` | 55 passed, zero failed | [Test log](checks/sync_offline_tests.txt) |
+| `python scripts/validate_data.py` | Six tables passed; existing snapshot warnings retained | [Data log](checks/sync_data.txt) |
+| `python -m compileall -q emporio scripts tests` | Passed | [Syntax log](checks/sync_syntax.txt) |
+| `python scripts/verify_run.py reports/runs/20261102T023230Z.json` | Source/hash parity; 20 turns, 22 product records, one owned order | [Run verification](checks/sync_run_verification.txt) |
+| Original data | All seven files matched original ZIP bytes | Publication snapshot |
+| Links, credentials and history | README targets/HTTP links checked; no matches for the bounded secret patterns; ancestry retained | Publication snapshot |
+| PDF | Three pages opened and visually inspected; candidate, role, six tools, results and repository hyperlink checked | Historical PDF hash in publication snapshot |
 
-No new Ollama inference was executed. The five original conversations still document
-20 actual turns on runtime `5dc7d6b` and their original model digest. Their source review
-results remain five PASS outcomes with the documented prototype limitations. A parity
-check is not a new semantic review or proof of universal security.
+Customer data provenance and the limits of the candidate's statement are documented in
+[data_provenance.md](data_provenance.md). No original data or history was rewritten.
 
-## Remaining actions and scope
+## Editorial review
 
-The candidate must review the corrected artifacts, authorize synchronization of this
-local documentation/PDF correction, and complete the recruiter-directed upload.
-The tested implementation does not require a first publication: it is already public.
-No technical blocker was found within the challenge checks performed. Windows/Linux,
-production login, transactions, arbitrary language coverage and universal prompt-injection
-resistance remain outside the verified prototype scope, as already documented.
+The README, reports 02-06, provenance note and conversation index were edited for
+clarity. Repeated publication narratives, duplicated feature/checklist tables and
+self-approval conclusions were removed. Technical findings, test counts, failure
+history, model metadata and AI disclosure remain. The PDF builder and submission PDF
+were edited together; all final pages were inspected.
+
+The [editorial log](checks/editorial_validation.txt) records the repeated offline suite,
+dependency/data/syntax checks, CLI checks, Markdown links/formatting, commit resolution,
+protected-file comparisons and final PDF verification. No new Ollama inference was
+needed: runtime, data and recorded conversations are unchanged.
+
+## Remaining actions
+
+The candidate must review and publish the editorial changes, then complete recruitment
+delivery. Windows/Linux execution, production authentication, transactions and universal
+prompt-injection resistance remain outside the recorded prototype checks. Keep the
+repository unchanged after submission.

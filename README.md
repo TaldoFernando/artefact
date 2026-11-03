@@ -65,9 +65,8 @@ answer. Retrieval relevance and generated policy wording still require evaluatio
 | CLI / `argparse` | Interactive interface; no web or WhatsApp deployment |
 | Optional ReportLab | Existing PDF overview builder, separate from the runtime |
 
-No agent framework, SQL database, embeddings service or vector database is required.
-Dependency ranges are declared in `pyproject.toml`; this is not a fully locked dependency
-set. The clean environment installed `pypdf 6.21.4` during this audit.
+Dependencies are declared in `pyproject.toml`. The recorded environment used
+Python 3.12.14 and `pypdf 6.21.4`; PDF generation uses the optional `pdf` dependency group.
 
 ## Getting Started
 
@@ -76,13 +75,8 @@ initial model download of about 5.2 GB and enough memory for inference and the c
 context. There is no inference API fee, but local compute, storage and electricity have
 costs. The source data are already included under `data/`; no import or migration is needed.
 
-The public repository is [TaldoFernando/artefact](https://github.com/TaldoFernando/artefact).
-Remote `main` was verified at `c078671f3f80fb404a2deebff89a621627e505d2` during the
-publication check. It includes tested runtime `5dc7d6b` and the 55-test suite; the runtime,
-tests and data match the reviewed version. The earlier anonymous clone at `0421ec4`
-passed its then-current 46 tests. See the [publication check](reports/06_publication_review.md)
-for the distinction between published implementation and subsequent documentation corrections.
-With an existing checkout, start at the virtual-environment step from its root.
+The source files are included in the [public repository](https://github.com/TaldoFernando/artefact).
+With an existing checkout, start at the virtual-environment step.
 
 ```sh
 git clone https://github.com/TaldoFernando/artefact.git emporio-assistant
@@ -151,79 +145,59 @@ HTTP timeout. A 404 reports the missing model; connectivity and malformed-respon
 errors are reported explicitly. Use a trusted endpoint: prompts may contain user text
 and retrieved internal policy passages.
 
-Only the Ollama protocol is implemented. Changing a model tag does not establish that
-its tool calling or response quality works; rerun the evaluation. Temperature zero is
-not a correctness guarantee, and model tags are mutable. The real-run records include
-the model digest, Ollama/Python versions, base Git commit and exact source file hashes.
+Only the Ollama protocol is implemented. Evaluate tool calling and responses again
+when changing models. Run records include the model digest, Ollama/Python versions,
+base Git commit and source hashes.
 See the [Ollama chat API](https://docs.ollama.com/api/chat),
 [tool-calling protocol](https://docs.ollama.com/capabilities/tool-calling) and
 [Qwen3 8B model page](https://ollama.com/library/qwen3:8b).
 
 ## Technical Decisions
 
-**Agent approach.** A hybrid of function calling and lexical RAG matches the distinction
-between operational records and written policies. Explicit read-only tools expose a
-smaller, inspectable interface than an unrestricted SQL or code-execution agent. A small
-Python loop makes dispatch, authorization and failure behavior easy to review.
+**Local model.** The candidate chose Ollama without a paid API. Qwen3 8B provides
+English/Portuguese interpretation and native tool support for local execution.
+Evaluation used a macOS host with 24 GiB RAM; latency depends on hardware and model state.
 
-**LLM.** The candidate explicitly chose local Ollama without a paid API. Qwen3 8B offers
-Portuguese/English understanding and tool support while fitting a local prototype.
-A small model has lower local resource requirements than much larger models but can
-misclassify products or omit policy conditions. Real runs revealed such errors, so
-numerical facts and order results are now rendered by Python instead of rewritten by
-the model. Actual latency depends on hardware and warm-model state; no SLA is claimed.
+**Function calling.** Six read-only functions give the model explicit query schemas.
+A small Python loop handles dispatch, argument checks and required evidence without
+an orchestration framework. Mel's prompt defines the store persona, scope, source use
+and transaction boundaries; retrieved text is treated as data.
 
-**Retrieval.** `pypdf` extracts original text once when a session starts. Normalized
-lexical scoring ranks the eight manual pages, using small English-to-Portuguese hints
-for concepts such as returns, hours, Saturday, payment, customized instruments and
-tracking. The three highest-ranked pages are returned, plus all source pages cited by
-recognized reviewed notes; a result can therefore contain more than three pages. Whole pages retain
-nearby conditions and exceptions. This avoids infrastructure disproportionate to eight
-pages; it is weaker on unfamiliar paraphrases than multilingual semantic retrieval.
-`emporio/policy_notes.py` contains reviewed English summaries of the supplied manual.
-Their exact-PDF hash check disables them if the document changes, so stale translations
-are not silently reused. Recognized scope, privacy, payments and return topics use these
-source-bound summaries as the final policy text; unfamiliar topics use generated prose.
-This deliberately prioritizes complete conditions over model fluency for sensitive rules.
+**Structured queries.** Each call reopens the CSVs it needs. Python handles stock,
+status, ownership and prices using `Decimal` with two-place half-up rounding.
+Only `is_active == 1` enables a campaign. If several are active, the largest percentage
+applies without stacking; this is an implementation assumption. PIX gives 5% off list
+price only when no campaign is active. Price filters use campaign/list prices before
+PIX. A named-product query with a mistaken category retries across categories.
+Historical order totals are not rebuilt from current prices, and an estimated delivery
+date is not treated as receipt. Orders do not record purchase channel.
 
-**Structured data.** Every tool call reopens the CSVs it needs. Prices, stock, status,
-promotions and ownership are handled by Python. `Decimal` uses two-place half-up rounding.
-Only `is_active == 1` enables a campaign; a campaign name does not establish current
-dates. Multiple active campaigns for one product use the largest percentage without
-stacking (an explicit assumption). PIX gives 5% off list price only without an active
-promotion. Price filters use the effective campaign/list price before a separate PIX
-discount. A named-product query with a mistaken category retries across categories.
+**Policy retrieval.** `pypdf` extracts the eight-page manual at session startup.
+Normalized lexical scoring and English-to-Portuguese topic hints return the three
+highest-ranked pages. Whole pages retain nearby conditions and exceptions without
+an embedding service. Reviewed notes in `emporio/policy_notes.py` add their cited pages,
+so a result may contain more than three pages. Their exact-PDF hash check disables
+them when the source changes. Recognized scope, privacy, payment and return topics use
+these notes; other topics use generated prose from retrieved pages.
 
-**Prompting.** Mel follows the manual's friendly but professional tone. Instructions
-require evidence, keep tool text untrusted, limit scope to musical instruments and forbid
-claims of completed transactions. The prompt flags conflicting contacts, installment
-minimums, warranty/exchange provisions and undefined shipping at exactly BRL 500. Policy
-responses remain model-generated; prompt instructions are not a security proof.
+**Session state.** Four complete turns and prior search/recommendation context are kept
+in memory. `/reset` clears them. The CLI does not save chat logs automatically;
+`scripts/evaluate.py` saves test sessions and tool evidence explicitly.
 
-**Conversation history.** Four complete turns are retained in process, with the previous
-search candidates for recommendation follow-ups. There is no automatic disk chat log,
-cross-session identity or multiuser isolation service. `/reset` clears all session state.
-The separate evaluation script deliberately saves synthetic test sessions and evidence.
-
-**Data preparation.** Original files are unchanged, including all six CSVs. The policy
-PDF filename was normalized to `store_policies.pdf`. Startup validates positive unique
-keys, relationships, monetary values, stock, known statuses, ISO dates, promotion flags,
-item quantities and JSON specification objects. Optional blank tracking/estimate fields
-become `None` when presented. Unicode normalization is used for searches, not to rewrite
-the originals. `python scripts/validate_data.py` prints counts without customer fields.
+**Data preparation.** All six CSVs and the policy PDF retain their original bytes;
+only the PDF filename was normalized to `store_policies.pdf`. Startup validates unique
+positive keys, relationships, monetary values, stock, statuses, ISO dates, promotion
+flags, quantities and JSON specification objects. Blank tracking/estimate fields become
+`None`. Search normalization does not rewrite source files.
 
 | File | Runtime use |
 |---|---|
 | Products (65 rows) | Name/category/price/stock/status, descriptions and JSON specifications |
-| Categories (9 rows) | Referential-integrity validation; category IDs are described in the tool schema |
+| Categories (9 rows) | Referential integrity and category IDs in tool schemas |
 | Promotions (25 rows) | Active flags and nonstacking percentage calculations |
 | Orders (20 rows) | Ownership-filtered status, tracking and stored delivery estimate |
-| Order items (22 rows) | Authorized order-item quantities joined to product names |
-| Customers (50 rows) | Referential-integrity validation only; names, phones and emails are not exposed to the model |
-
-Historical order totals are not recomputed from today's catalog prices. `estimated_delivery`
-is not actual receipt, and orders lack purchase-channel information. The files remain a
-supplied snapshot, even when reread; there is no ERP, live carrier or inventory reservation.
+| Order items (22 rows) | Authorized item quantities joined to product names |
+| Customers (50 rows) | Referential integrity only; names, phones and emails are not exposed to the model |
 
 ## Features
 
@@ -274,74 +248,68 @@ session with fixture identity 2 is clearly separate from the unauthenticated ses
 
 ## Testing
 
-Offline, after installation:
+Run the offline checks after installation:
 
 ```sh
+python -m pip check
 python -m unittest discover -s tests -v
 python scripts/validate_data.py
+python -m compileall -q emporio scripts tests
 ```
 
-The final audited suite contains **55 tests**, executed successfully in an installed
-created environment. It covers existing/missing/unavailable products, price ranges,
-active/inactive promotions, parsed specifications, six-table validation, valid/missing/
-foreign orders, mocked policy and scope turns, combined sources, malformed tool payloads,
-lookup failures, HTTP failures, timeouts, memory reset and loop bounds. No coverage
-percentage has been measured. Scripted model fixtures verify orchestration and data
-handling; their canned final answers do **not** establish real-LLM semantic correctness.
+The recorded suite passed **55 tests, with zero failures**, on Python 3.12.14 / macOS.
+It covers catalog filters, prices/promotions/PIX, specifications, six-table validation,
+order ownership, mixed responses, follow-ups, malformed tool calls, lookup/provider
+failures, reset and loop bounds. Scripted model fixtures check orchestration and data
+handling. No coverage percentage was measured.
 
-Real integration evaluation requires a running Ollama with the configured model:
+Real-model evaluation requires Ollama and the configured model:
 
 ```sh
 python scripts/evaluate.py
-# After a correction, rerun an individual scenario:
+# Rerun one scenario after a correction:
 python scripts/evaluate.py --scenario 04_return_policy
 ```
 
-The script executes actual `Agent.reply` calls, saves exact responses and tool results,
-and initially marks the files **PENDING REVIEW**. Review each against CSV/PDF sources,
-record PASS/PARTIAL/FAIL plus rationale, and rerun failed scenarios after corrections.
-JSON records under `reports/runs/` retain the execution metadata. Source-review annotations
-can be rendered without generating new answers using `--render-run PATH_TO_RUN_JSON`.
-Running the script overwrites the corresponding example files with the new unreviewed
-run; old records remain in `reports/runs/`.
-`python scripts/verify_run.py PATH_TO_RUN_JSON` independently checks recorded product/
-order values, source-commit hashes, review integrity and fixture customer-field leaks;
-it does not replace semantic review. Exact verified commands are in the conversation index.
+The five reviewed conversations contain **20 actual turns** on runtime `5dc7d6b`, with
+five PASS outcomes against their documented source/behavior criteria. This is separate
+from the offline suite. See the [conversation index](examples/README.md) for transcripts,
+model metadata, earlier failures and reproduction commands.
 
-The clean-environment package install, CLI help/start/reset/exit and offline suite were
-executed on macOS. Windows and Linux instructions are not platform-tested. An anonymous
-public clone of revision `0421ec4` passed installation and its baseline 46-test suite.
-The published runtime has 55 passing tests, also rerun during the publication check.
-The submission PDF uses the preserved execution record and the later
-[publication record](reports/publication_sync.json). No new Ollama inference is claimed:
-the five examples retain their original tested runtime and exact outputs.
+The evaluator saves exact responses/tool results in `reports/runs/` and initially marks
+examples **PENDING REVIEW**. Review them against the CSV/PDF sources and record a result
+and rationale. A new run overwrites the corresponding example files; old JSON records
+remain. Annotations can be rendered with `--render-run PATH_TO_RUN_JSON` without inference.
+
+```sh
+python scripts/verify_run.py reports/runs/20261102T023230Z.json
+```
+
+This verifier checks product/order values, source hashes, review integrity and fixture
+customer-field disclosure. It does not grade policy meaning or generalize scenario
+results to arbitrary prompts. Installation, CLI help/start/reset/exit and dependency
+checks were also exercised on macOS; historical logs are linked in the audit reports.
 
 ## Known Limitations
 
-- Static, historically dated fixtures; multiple CSV reads are not transactional. Stock
-  and delivery estimates are not live guarantees. Promotions have no validity dates.
-- No production login, OTP, WhatsApp integration, carrier API, refund processor or handoff
-  queue. Trusted fixture injection tests authorization, not a real user login.
-- Lexical retrieval and token matching may miss synonyms. Candidate recommendations
-  cover the returned page only and use explicit catalog wording, not expert advice.
-- Topic matching and generated policy prose can still miss paraphrases or be repetitive.
-  Reviewed policy notes must be rechecked and rebound if the PDF changes; their hash
-  guard prevents stale notes but does not automatically translate an updated manual.
-  Prompt injection is mitigated by minimal tools and prompts, not eliminated. No claim
-  of production security or universal correctness is made.
-- The manual conflicts on WhatsApp numbers, email spelling, installment minimums and
-  exchange/warranty handling; exactly BRL 500 local shipping is undefined. Escalate.
-  Customized online returns require human review rather than a categorical denial.
-- Regular hours use `America/Campo_Grande`; no holiday calendar is integrated.
-- Four turns bound history by count, not by token size. Long retrieved contexts can
-  exceed a model's context budget. There is no concurrent-session server or load test.
-- `--trace` and evaluation records include internal policy passages; keep them local
-  when substituting sensitive data. Supplied fixtures describe a fictitious store.
-- Dependency ranges and model tags are configurable, not a reproducibility lockfile.
-  Recorded model digests and source hashes document a tested run, not every future run.
-- The tested implementation and evaluation evidence are public at `c078671`.
-  Subsequent documentation/PDF corrections are identified separately in the publication
-  review. Candidate review and recruitment submission remain candidate-controlled steps.
+- **Data and business rules:** fixtures are historical snapshots, CSV reads are not
+  transactional, promotions lack validity dates, and delivery estimates are not live
+  guarantees. The manual conflicts on contacts, installment minimums and exchange/warranty
+  rules; shipping at exactly BRL 500 is undefined. Customized online returns need staff
+  review. Regular hours use `America/Campo_Grande` without a holiday calendar.
+- **Language and retrieval:** lexical search can miss synonyms and policy paraphrases.
+  Recommendations cover the returned search page and require explicit source wording
+  about beginners. Generated policy prose may be incomplete or repetitive. Changed PDFs
+  require review and rebinding of the English policy notes.
+- **Access and actions:** the CLI has no login, OTP, WhatsApp channel, live ERP/carrier
+  integration, transaction processor or operational handoff. A trusted order fixture tests
+  ownership filtering, not production authentication. `--trace` and evaluation logs include
+  internal policy text; restrict them when using sensitive data. Prompt injection remains
+  a risk despite tool restrictions and evidence checks.
+- **Runtime and reproducibility:** four-turn memory does not bound token size. There is
+  no multiuser server, session-isolation service or load test. Model tags and dependency
+  ranges are not pinned. Windows/Linux instructions are documented but were not executed;
+  recorded checks used macOS.
 
 ## Future Improvements
 
@@ -355,47 +323,41 @@ the five examples retain their original tested runtime and exact outputs.
 
 ## AI-Assisted Development
 
-**OpenAI Codex** inspected the brief, CSVs, policy PDF and existing implementation, then
-assisted with Python changes, prompts, regression tests, real-run evaluation, source
-comparison and English documentation. Errors were identified through source checks,
-executed tests and real model conversations: examples include category misclassification,
-confusing product status with promotion status, repeated return questions and discarded
-mixed-source responses. Corrections were tested rather than assumed correct.
+**OpenAI Codex** assisted with source inspection, implementation, prompts, regression
+tests, actual model runs, source comparison and English documentation. Checks exposed
+category/promotion mistakes, incomplete return conditions and discarded mixed-source
+answers; corrections were checked with tests and recorded conversations.
 
-The candidate explicitly chose **Ollama local, without a paid API** in this conversation.
-The dataset was supplied as part of the technical challenge involving a fictional music
-store. Original records are preserved without modification. Customer names, email addresses
-and telephone numbers are neither authentication credentials nor exposed by the agent's
-tools. The [data provenance note](reports/data_provenance.md) documents the candidate's
-actual statement and its evidential limits; it does not assert an Artefact certification
-or a formal publication license.
-Other implementation choices were proposed and implemented with Codex assistance. No
-unrecorded claim is made about independent candidate authorship or review. Before
-submission, the candidate should review the implementation and audit findings, confirm
-which decisions they endorse, and be prepared to explain them. The repository preserves
-incremental Git history; no fabricated unaided development history is presented.
+The candidate explicitly chose **local Ollama without a paid API**. Other design and
+implementation work received Codex assistance. Candidate review and endorsement are
+not assumed: the candidate is responsible for reviewing the code, results and decisions
+before submission and being able to explain them.
+
+The supplied dataset describes a fictional music store. The
+[data provenance note](reports/data_provenance.md) records the candidate's actual
+statement and its limits. Original records and incremental Git history are preserved.
 
 ## Audit and Submission
 
-- [Implementation and validation audit](reports/02_implementation_audit.md)
-- [README compliance audit](reports/03_readme_audit.md)
-- [Conversation validation](examples/README.md)
+- [Implementation findings](reports/02_implementation_audit.md)
+- [README checks](reports/03_readme_audit.md)
+- [Conversation results and failure history](reports/04_conversation_audit.md)
+- [Final technical review](reports/05_final_review.md)
+- [Publication checks and latest editorial validation](reports/06_publication_review.md)
 
-The official brief requires a public GitHub repository, genuine incremental commits and
-3-5 varied conversations including a nontrivial case. The recruiting email also requests
-an English PDF uploaded through its form. The repository and its history are already
-public at the URL above, including the tested runtime and evaluation evidence in
-`c078671`. The [publication review](reports/06_publication_review.md) distinguishes this
-published version from the later documentation/PDF corrections prepared locally.
-This correction session does not push commits, upload a form or send email. Review the
-corrected artifacts, synchronize these documentation corrections with explicit authorization,
-and complete submission. Preserve the repository after delivery; do not alter it after submission.
+Runtime `5dc7d6b` is the source version behind the 55-test suite and five real-model
+examples. Remote `main` was observed at `7882555` during this editorial review; it
+contains that runtime and the earlier documentation corrections. The immutable
+[execution record](reports/final_validation.json) and
+[publication snapshot](reports/publication_sync.json) describe their respective checks,
+including the PDF versions that existed then.
 
-The [final review report](reports/05_final_review.md) and [validation record](reports/final_validation.json)
-preserve the historical checked version and actual test outcomes. The later
-[publication record](reports/publication_sync.json) supersedes their repository/PDF status
-without rewriting prior execution results.
-To rebuild the PDF after validation:
+The brief requests a public repository, incremental history and 3-5 conversations;
+the recruiting email also requests an English PDF. Review and publish the editorial
+changes before uploading the PDF/link. No push or recruitment submission is performed
+by this review. Keep the repository unchanged after submission.
+
+To rebuild the submission PDF:
 
 ```sh
 python -m pip install -e '.[pdf]'
